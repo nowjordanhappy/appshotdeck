@@ -10,7 +10,7 @@ interface ProjectConfig {
 
 // ─── Save ────────────────────────────────────────────────────────────────────
 
-export async function saveProject(slides: Slide[]): Promise<void> {
+export async function saveProject(slides: Slide[], projectName = 'appshotdeck-project'): Promise<void> {
   const zip = new JSZip()
   const images = zip.folder('images')!
 
@@ -40,7 +40,8 @@ export async function saveProject(slides: Slide[]): Promise<void> {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'appshotdeck-project.zip'
+  const safeName = projectName.replace(/[^a-z0-9_-]/gi, '-').toLowerCase()
+  a.download = `appshotdeck-${safeName}.zip`
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }

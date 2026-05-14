@@ -22,6 +22,7 @@ export type Background =
   | { type: 'gradient'; from: string; to: string; angle: number }
 
 export type TextPosition = 'top' | 'bottom'
+export type TextAlign = 'left' | 'center' | 'right'
 
 export interface Slide {
   id: string
@@ -39,9 +40,29 @@ export interface Slide {
   deviceScale: number
   showHeadline: boolean
   showSubtitle: boolean
+  headlineFontFamily: string
+  headlineFontWeight: number
+  headlineFontSize: number
+  subtitleFontFamily: string
+  subtitleFontWeight: number
+  subtitleFontSize: number
+  textAlign: TextAlign
+  textShadow: 'off' | 'dark' | 'light'
+}
+
+export type SlideConfig = Omit<Slide, 'screenshotDataUrl'>
+
+export interface ProjectMeta {
+  id: string
+  name: string
+  createdAt: number
+  slides: SlideConfig[]
+  activeSlideId: string
 }
 
 export interface EditorState {
+  projects: ProjectMeta[]
+  activeProjectId: string
   slides: Slide[]
   activeSlideId: string
   addSlide: () => void
@@ -50,4 +71,9 @@ export interface EditorState {
   setActiveSlide: (id: string) => void
   updateSlide: (id: string, patch: Partial<Slide>) => void
   reorderSlides: (fromIndex: number, toIndex: number) => void
+  applyToAllSlides: (patch: Partial<SlideConfig>) => void
+  createProject: (name: string) => void
+  renameProject: (id: string, name: string) => void
+  deleteProject: (id: string) => void
+  switchProject: (id: string) => Promise<void>
 }

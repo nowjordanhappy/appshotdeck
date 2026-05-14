@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
+import { CopyCheck } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
-import { GRADIENT_PRESETS, SOLID_PRESETS } from '../../data/backgrounds'
+import { GRADIENT_PRESETS, LIGHT_GRADIENT_PRESETS, SOLID_PRESETS } from '../../data/backgrounds'
 import type { Background } from '../../types'
 
 function bgPreviewStyle(bg: Background): React.CSSProperties {
@@ -10,7 +11,7 @@ function bgPreviewStyle(bg: Background): React.CSSProperties {
 
 export function BackgroundPanel() {
   const { t } = useTranslation()
-  const { slides, activeSlideId, updateSlide } = useEditorStore()
+  const { slides, activeSlideId, updateSlide, applyToAllSlides } = useEditorStore()
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
 
@@ -22,6 +23,19 @@ export function BackgroundPanel() {
         <p className="text-xs text-muted uppercase tracking-wider">{t('background.gradients')}</p>
         <div className="grid grid-cols-3 gap-2">
           {GRADIENT_PRESETS.map((p) => (
+            <button key={p.label} title={p.label}
+              onClick={() => updateSlide(activeSlideId, { background: p.bg })}
+              className="aspect-video rounded-lg border-2 border-medium hover:border-indigo-400 transition-all"
+              style={bgPreviewStyle(p.bg)}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs text-muted uppercase tracking-wider">{t('background.light_gradients')}</p>
+        <div className="grid grid-cols-3 gap-2">
+          {LIGHT_GRADIENT_PRESETS.map((p) => (
             <button key={p.label} title={p.label}
               onClick={() => updateSlide(activeSlideId, { background: p.bg })}
               className="aspect-video rounded-lg border-2 border-medium hover:border-indigo-400 transition-all"
@@ -115,6 +129,16 @@ export function BackgroundPanel() {
           </div>
         )}
       </div>
+
+      {slides.length > 1 && (
+        <button
+          onClick={() => applyToAllSlides({ background: slide.background })}
+          className="w-full flex items-center justify-center gap-1.5 py-2 text-xs text-muted hover:text-foreground transition-colors"
+        >
+          <CopyCheck className="w-3.5 h-3.5" />
+          {t('background.apply_to_all')}
+        </button>
+      )}
     </div>
   )
 }

@@ -1,7 +1,8 @@
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { Download } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Header } from './components/Header'
+import { ConfirmDialog } from './components/ConfirmDialog'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
 import { SlideStrip } from './components/SlideStrip'
@@ -58,7 +59,8 @@ function previewScale(format: SlideFormat) {
 
 export default function App() {
   const canvasRefs = useRef<Map<string, HTMLDivElement>>(new Map())
-  const { slides, activeSlideId } = useEditorStore()
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const { slides, activeSlideId, setActiveSlide, duplicateSlide, removeSlide } = useEditorStore()
   const { isDark } = useThemeStore()
   const { t } = useTranslation()
   const activeSlide = slides.find((s) => s.id === activeSlideId)
@@ -67,6 +69,34 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
   }, [isDark])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable
+      const isMod = e.metaKey || e.ctrlKey
+
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        if (isTyping) return
+        const idx = slides.findIndex((s) => s.id === activeSlideId)
+        const next = e.key === 'ArrowLeft' ? idx - 1 : idx + 1
+        if (next >= 0 && next < slides.length) setActiveSlide(slides[next].id)
+        return
+      }
+
+      if (isMod && e.key === 'd') {
+        e.preventDefault()
+        duplicateSlide(activeSlideId)
+        return
+      }
+
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !isTyping) {
+        if (slides.length > 1) setPendingDelete(activeSlideId)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [slides, activeSlideId, setActiveSlide, duplicateSlide, removeSlide])
 
   const handleExportCurrent = useCallback(async () => {
     if (!activeSlide) return
@@ -121,6 +151,14 @@ export default function App() {
 
       <SlideStrip />
       <HiddenExportCanvases canvasRefs={canvasRefs} />
+
+      {pendingDelete && (
+        <ConfirmDialog
+          message="Remove this slide? This can't be undone."
+          onConfirm={() => { removeSlide(pendingDelete); setPendingDelete(null) }}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   )
 }

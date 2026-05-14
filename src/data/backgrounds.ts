@@ -14,13 +14,25 @@ export const GRADIENT_PRESETS: BackgroundPreset[] = [
   { label: 'Violet Dusk',     bg: { type: 'gradient', from: '#4C1D95', to: '#1E1B4B', angle: 135 } },
 ]
 
+export const LIGHT_GRADIENT_PRESETS: BackgroundPreset[] = [
+  { label: 'Sky',         bg: { type: 'gradient', from: '#E0F2FE', to: '#BFDBFE', angle: 135 } },
+  { label: 'Mint',        bg: { type: 'gradient', from: '#D1FAE5', to: '#A7F3D0', angle: 135 } },
+  { label: 'Peach',       bg: { type: 'gradient', from: '#FEF3C7', to: '#FECACA', angle: 135 } },
+  { label: 'Lavender',    bg: { type: 'gradient', from: '#EDE9FE', to: '#E0E7FF', angle: 135 } },
+  { label: 'Rose Mist',   bg: { type: 'gradient', from: '#FFE4E6', to: '#FBCFE8', angle: 135 } },
+  { label: 'Warm Cream',  bg: { type: 'gradient', from: '#FFFBEB', to: '#FEF9C3', angle: 135 } },
+]
+
 export const SOLID_PRESETS: BackgroundPreset[] = [
   { label: 'Slate 950',   bg: { type: 'solid', color: '#020617' } },
   { label: 'Zinc 900',    bg: { type: 'solid', color: '#18181b' } },
   { label: 'Deep Navy',   bg: { type: 'solid', color: '#0a0f1e' } },
   { label: 'Black',       bg: { type: 'solid', color: '#000000' } },
+  { label: 'White',       bg: { type: 'solid', color: '#ffffff' } },
+  { label: 'Light Gray',  bg: { type: 'solid', color: '#f1f5f9' } },
+  { label: 'Warm White',  bg: { type: 'solid', color: '#fffbf0' } },
   { label: 'Off White',   bg: { type: 'solid', color: '#fafaf9' } },
   { label: 'Warm Gray',   bg: { type: 'solid', color: '#44403c' } },
 ]
 
-export const ALL_PRESETS = [...GRADIENT_PRESETS, ...SOLID_PRESETS]
+export const ALL_PRESETS = [...GRADIENT_PRESETS, ...LIGHT_GRADIENT_PRESETS, ...SOLID_PRESETS]

@@ -70,8 +70,18 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const slotY = (landscape ? slotY_landscape : slotY_portrait) + (landscape ? 0 : offsetPx)
 
     // Relative font sizing — scales with canvas width for all formats
-    const headlineSize = Math.round(W * (landscape ? 0.036 : 0.063))
-    const subtitleSize = Math.round(W * (landscape ? 0.022 : 0.039))
+    const headlineSize = Math.round(W * (landscape ? 0.036 : 0.063) * ((slide.headlineFontSize ?? 100) / 100))
+    const subtitleSize = Math.round(W * (landscape ? 0.022 : 0.039) * ((slide.subtitleFontSize ?? 100) / 100))
+    const textAlign = slide.textAlign ?? 'center'
+    const shadowBlur = Math.round(W * 0.025)
+    const shadowValue = (() => {
+      const mode = slide.textShadow ?? 'off'
+      if (mode === 'dark')  return `0 0 ${shadowBlur}px rgba(0,0,0,0.85), 0 ${Math.round(shadowBlur * 0.3)}px ${shadowBlur * 2}px rgba(0,0,0,0.85)`
+      if (mode === 'light') return `0 0 ${shadowBlur}px rgba(255,255,255,0.45), 0 ${Math.round(shadowBlur * 0.3)}px ${shadowBlur * 2}px rgba(255,255,255,0.45)`
+      return undefined
+    })()
+    const headlineShadow = shadowValue
+    const subtitleShadow = shadowValue
 
     return (
       <div
@@ -89,7 +99,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
       >
         {/* ── Text ──────────────────────────────────────────────────────── */}
         {landscape ? (
-          // Tablet: left column, vertically centered, left-aligned
+          // Tablet: left column, vertically centered
           <div
             style={{
               position: 'absolute',
@@ -100,15 +110,16 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
+              textAlign,
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: 700, lineHeight: 1.2, marginBottom: 24, color: slide.textColor }}>
+              <div style={{ fontSize: headlineSize, fontWeight: slide.headlineFontWeight ?? 700, fontFamily: slide.headlineFontFamily ?? 'Inter', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, textShadow: headlineShadow }}>
                 {slide.headline}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: 400, lineHeight: 1.5, color: slide.subtitleColor }}>
+              <div style={{ fontSize: subtitleSize, fontWeight: slide.subtitleFontWeight ?? 400, fontFamily: slide.subtitleFontFamily ?? 'Inter', lineHeight: 1.5, color: slide.subtitleColor, textShadow: subtitleShadow }}>
                 {slide.subtitle}
               </div>
             )}
@@ -123,16 +134,16 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               top: slide.textPosition === 'top'
                 ? Math.round(H * 0.055)
                 : slotY + dSlotH + Math.round(H * 0.03),
-              textAlign: 'center',
+              textAlign,
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor }}>
+              <div style={{ fontSize: headlineSize, fontWeight: slide.headlineFontWeight ?? 700, fontFamily: slide.headlineFontFamily ?? 'Inter', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, textShadow: headlineShadow }}>
                 {slide.headline}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: 400, lineHeight: 1.45, color: slide.subtitleColor }}>
+              <div style={{ fontSize: subtitleSize, fontWeight: slide.subtitleFontWeight ?? 400, fontFamily: slide.subtitleFontFamily ?? 'Inter', lineHeight: 1.45, color: slide.subtitleColor, textShadow: subtitleShadow }}>
                 {slide.subtitle}
               </div>
             )}

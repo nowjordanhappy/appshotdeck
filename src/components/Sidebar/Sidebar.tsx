@@ -51,7 +51,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-72 flex-shrink-0 flex flex-col surface border-r border-subtle">
+    <aside className="w-80 flex-shrink-0 flex flex-col surface border-r border-subtle">
       {/* Format picker */}
       <div className="p-3 border-b border-subtle space-y-2">
         <div className="flex bg-black/8 dark:bg-white/10 rounded-lg p-0.5">
@@ -118,7 +118,7 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {tab === 'upload'     && <UploadPanel />}
         {tab === 'frame'      && <FramePanel />}
         {tab === 'background' && <BackgroundPanel />}

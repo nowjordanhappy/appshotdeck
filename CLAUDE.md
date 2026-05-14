@@ -2,7 +2,7 @@
 
 ## What this is
 
-AppShotDeck is a browser-only marketing screenshot composer for Play Store and App Store. No backend. State lives in localStorage via Zustand persist. Export is DOM → PNG via html-to-image + WebGL compositing for 3D frames.
+AppShotDeck is a browser-only marketing screenshot composer for Play Store and App Store. No backend. Slide configs live in localStorage via Zustand persist. Screenshots live in IndexedDB. Export is DOM → PNG via html-to-image + WebGL compositing for 3D frames.
 
 ## Dev commands
 
@@ -29,6 +29,8 @@ Two frame types, distinguished by whether `device3d` is present on the `FrameDef
 - `deviceScaleFactor = (slide.deviceScale ?? 100) / 100` — scales both slot dimensions uniformly.
 - Portrait device Y: `Math.round((H - dSlotH) / 2) + Math.round(H * deviceOffset / 100)`. **0 = canvas center**, +30 = default layout position (below center).
 - Landscape device X: same center-based formula using W. 0 = canvas center, +16 = default column position.
+- Font sizes scale with canvas width: headline = `W * 0.063` (portrait) / `W * 0.036` (landscape), then multiplied by `headlineFontSize / 100`.
+- Text shadow blur = `Math.round(W * 0.025)`. Color: dark bg → white glow, light bg → dark shadow (luminance from bg `from`/`color` hex).
 
 ### Device3D (`src/components/Canvas/Device3D.tsx`)
 
@@ -49,21 +51,54 @@ Critical details for the 3D renderer:
 
 - Saves as ZIP: `config.json` (all slide settings) + `images/<id>.png` (one file per slide screenshot).
 - Screenshots stored as real PNG files, not base64 in JSON.
+- On load (`handleLoad` in Header.tsx): screenshots from ZIP are saved to IndexedDB immediately so they survive refreshes.
+
+### Screenshot storage (`src/utils/db.ts`)
+
+- IndexedDB database `appshotdeck`, object store `screenshots`.
+- Keys: `${projectId}/${slideId}`.
+- `saveScreenshot`, `getScreenshot`, `deleteScreenshot`, `copyScreenshot`, `deleteProjectScreenshots` — all async.
+- `deleteProjectScreenshots` uses `openCursor()` to find all keys with prefix `${projectId}/`.
 
 ### State (`src/store/useEditorStore.ts`)
 
 - Zustand with `persist` middleware → localStorage.
-- Key slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl` (base64), `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`.
-- New fields default: `deviceOffset` = 30 for portrait phones/iPad, 16 for tablets. `deviceScale` = 100. `showHeadline` / `showSubtitle` = true.
+- `partialize` strips `screenshotDataUrl` from slides before persisting. Only configs go to localStorage.
+- `onRehydrateStorage`: async — fetches screenshots from IndexedDB after hydration. Handles v1→v2 migration (old `slides` array at top level with inline base64).
+- Key slide fields: `format`, `frame`, `frameTilt`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`, `headlineFontFamily`, `headlineFontWeight`, `headlineFontSize`, `subtitleFontFamily`, `subtitleFontWeight`, `subtitleFontSize`, `textAlign`, `textShadow`.
+- `textShadow`: `'off' | 'dark' | 'light'` — default `'off'`.
+- `textAlign`: `'left' | 'center' | 'right'` — default `'center'`.
+- Font sizes: `headlineFontSize` / `subtitleFontSize` — percentage multiplier (60–140), default 100.
+- Font weights: `headlineFontWeight` default 700, `subtitleFontWeight` default 400.
+- Font families: `headlineFontFamily` / `subtitleFontFamily` — default `'Inter'`. Available: Inter, Poppins, Montserrat, Nunito, Space Grotesk (all via @fontsource, latin subset only, weights 300/400/600/700).
 - Always add `?? default` fallbacks when reading new fields in components — old persisted slides won't have them.
+- `applyToAllSlides(patch)` — merges patch into every slide in the active project.
 
 ### FramePanel device controls (`src/components/Sidebar/FramePanel.tsx`)
 
 - **Pos slider** (-30 to +30): vertical offset for portrait (phones/iPad), horizontal for landscape (tablets). 0 = canvas center.
-- **Size slider** (60–100%): scales device slot uniformly. Not available for ipad-13 (no — actually it IS available).
+- **Size slider** (60–100%): scales device slot uniformly.
 - **Center button**: sets deviceOffset = 0. `AlignCenterVertical` for portrait, `AlignCenterHorizontal` for landscape.
 - **Reset button**: restores default offset (30 for phones/iPad, 16 for tablets).
 - `DEFAULT_OFFSET` map drives reset values. `RESIZABLE_FORMATS` and `PORTRAIT_PHONE_FORMATS` sets control which controls appear.
+
+### Multi-project (`src/components/Header.tsx`)
+
+- Project switcher: colored pill button (color derived from hash of project ID mod palette) opens dropdown.
+- Dropdown: lists all projects with color dot + checkmark for active. Rename (pencil) and delete (trash) per project.
+- Delete project shows `ConfirmDialog` before calling `deleteProject`.
+- Project names are included in export ZIP filenames: `${name}-screenshots.zip` and `appshotdeck-${name}.zip`.
+
+### Keyboard shortcuts (`src/App.tsx`)
+
+- `←` / `→` — navigate between slides (suppressed when typing in input/textarea).
+- `Cmd+D` / `Ctrl+D` — duplicate active slide.
+- `Delete` / `Backspace` — opens `ConfirmDialog` to remove active slide (only if >1 slide, suppressed when typing).
+
+### ConfirmDialog (`src/components/ConfirmDialog.tsx`)
+
+- Reusable modal with backdrop click to cancel, Cancel and red Remove buttons.
+- Used for slide deletion (keyboard) and project deletion (header dropdown).
 
 ## Format configs (SlideCanvas.tsx)
 
@@ -81,4 +116,5 @@ Critical details for the 3D renderer:
 - No comments unless the WHY is non-obvious.
 - Prefer editing existing files over creating new ones.
 - Tailwind CSS v3 (not v4) — `tailwind.config.ts` is present.
-- i18n via react-i18next — add new strings to `src/locales/en.json` and `es.json`.
+- i18n via react-i18next — add new strings to both `src/locales/en/translation.json` and `src/locales/es/translation.json`.
+- Background presets: `GRADIENT_PRESETS` (dark), `LIGHT_GRADIENT_PRESETS` (light), `SOLID_PRESETS` in `src/data/backgrounds.ts`.

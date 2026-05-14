@@ -91,7 +91,7 @@ export interface ExportEntry {
   name: string
 }
 
-export async function exportAll(entries: ExportEntry[]): Promise<void> {
+export async function exportAll(entries: ExportEntry[], projectName = 'appshotdeck'): Promise<void> {
   const zip = new JSZip()
   const folders: Record<string, JSZip> = {}
 
@@ -105,6 +105,7 @@ export async function exportAll(entries: ExportEntry[]): Promise<void> {
 
   const blob = await zip.generateAsync({ type: 'blob' })
   const url = URL.createObjectURL(blob)
-  triggerDownload(url, 'appshotdeck-export.zip')
+  const safeName = projectName.replace(/[^a-z0-9_-]/gi, '-').toLowerCase()
+  triggerDownload(url, `${safeName}-screenshots.zip`)
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }

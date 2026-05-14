@@ -39,8 +39,10 @@
   },
   "background": {
     "gradients": "Gradients",
+    "light_gradients": "Light",
     "solids": "Solids",
     "custom": "Custom",
+    "apply_to_all": "Apply background to all slides",
     "solid": "Solid",
     "gradient": "Gradient",
     "from": "From",
@@ -56,7 +58,18 @@
     "position_top": "Top",
     "position_bottom": "Bottom",
     "headline_placeholder": "Main headline…",
-    "subtitle_placeholder": "Supporting text…"
+    "subtitle_placeholder": "Supporting text…",
+    "font": "Font",
+    "weight": "Weight",
+    "size": "Size",
+    "alignment": "Alignment",
+    "headline_size": "Headline Size",
+    "subtitle_size": "Subtitle Size",
+    "shadow": "Shadow",
+    "shadow_off": "Off",
+    "shadow_dark": "Dark",
+    "shadow_light": "Light",
+    "apply_to_all": "Apply style to all slides"
   },
   "strip": {
     "duplicate": "Duplicate",
@@ -67,5 +80,8 @@
   },
   "export": {
     "slide": "Export this slide PNG"
+  },
+  "projects": {
+    "new": "New Project"
   }
 }

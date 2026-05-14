@@ -39,8 +39,10 @@
   },
   "background": {
     "gradients": "Degradados",
+    "light_gradients": "Claros",
     "solids": "Sólidos",
     "custom": "Personalizado",
+    "apply_to_all": "Aplicar fondo a todas las diapositivas",
     "solid": "Sólido",
     "gradient": "Degradado",
     "from": "Desde",
@@ -56,7 +58,18 @@
     "position_top": "Arriba",
     "position_bottom": "Abajo",
     "headline_placeholder": "Título principal…",
-    "subtitle_placeholder": "Texto de apoyo…"
+    "subtitle_placeholder": "Texto de apoyo…",
+    "font": "Fuente",
+    "weight": "Grosor",
+    "size": "Tamaño",
+    "alignment": "Alineación",
+    "headline_size": "Tamaño del título",
+    "subtitle_size": "Tamaño del subtítulo",
+    "shadow": "Sombra",
+    "shadow_off": "No",
+    "shadow_dark": "Oscura",
+    "shadow_light": "Clara",
+    "apply_to_all": "Aplicar estilo a todas las diapositivas"
   },
   "strip": {
     "duplicate": "Duplicar",
@@ -67,5 +80,8 @@
   },
   "export": {
     "slide": "Exportar esta captura PNG"
+  },
+  "projects": {
+    "new": "Nuevo proyecto"
   }
 }
