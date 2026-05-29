@@ -3,6 +3,7 @@ import { CopyCheck } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { GRADIENT_PRESETS, LIGHT_GRADIENT_PRESETS, SOLID_PRESETS } from '../../data/backgrounds'
 import type { Background } from '../../types'
+import { Tooltip } from '../Tooltip'
 
 function bgPreviewStyle(bg: Background): React.CSSProperties {
   if (bg.type === 'solid') return { background: bg.color }
@@ -137,6 +138,7 @@ export function BackgroundPanel() {
         >
           <CopyCheck className="w-3.5 h-3.5" />
           {t('background.apply_to_all')}
+          <Tooltip text={t('tips.apply_bg')} side="top-end" />
         </button>
       )}
     </div>

@@ -53,6 +53,14 @@ Critical details for the 3D renderer:
 - Screenshots stored as real PNG files, not base64 in JSON.
 - On load (`handleLoad` in Header.tsx): screenshots from ZIP are saved to IndexedDB immediately so they survive refreshes.
 
+### Workspace save/load (`src/utils/workspace.ts`)
+
+- Saves ALL projects as one ZIP: `workspace.json` + `images/{projectId}/{slideId}.png`.
+- `workspace.json` schema: `{ version: 1, projects: [{ id, name, createdAt, slides: SlideConfig[], activeSlideId }] }` — each slide has an extra `image` field pointing to its PNG path in the ZIP.
+- On save: active project uses live `slides` state; non-active projects use their stored `SlideConfig[]` from the Zustand store. All screenshots fetched from IndexedDB via `getScreenshot`.
+- On load (`handleLoadAll` in Header.tsx): checks for ID conflicts. No conflicts → imports immediately. Conflicts → shows `WorkspaceImportDialog` with Skip/Replace choice.
+- `doImportWorkspace(loadedProjects, replace)` — module-level function (not a hook) that writes to the store directly via `useEditorStore.setState`. Handles replacing the active project's live slides if it was among the replaced ones.
+
 ### Screenshot storage (`src/utils/db.ts`)
 
 - IndexedDB database `appshotdeck`, object store `screenshots`.
@@ -88,6 +96,28 @@ Critical details for the 3D renderer:
 - Dropdown: lists all projects with color dot + checkmark for active. Rename (pencil) and delete (trash) per project.
 - Delete project shows `ConfirmDialog` before calling `deleteProject`.
 - Project names are included in export ZIP filenames: `${name}-screenshots.zip` and `appshotdeck-${name}.zip`.
+- **Save / Load** buttons are dropdowns: Save Project / Save All Projects and Load Project / Load All Projects.
+- Errors use `useToastStore.getState().addToast(msg, 'error')` — never `alert()`.
+
+### Toast notifications (`src/store/useToastStore.ts`, `src/components/ToastContainer.tsx`)
+
+- Zustand store (no persist). `addToast(message, type?)` — auto-dismisses after 4s, caps at 3 visible toasts.
+- Types: `'error'` (red) | `'success'` (green) | `'info'` (dark). Default: `'info'`.
+- `<ToastContainer />` is rendered at the root in `App.tsx`. Positioned `top-4 right-4` (above the slide strip).
+- Call from anywhere via `useToastStore.getState().addToast(...)` — no hook required outside React components.
+
+### Tooltip (`src/components/Tooltip.tsx`)
+
+- Renders an `ⓘ` icon (Info, 13px) with `ml-1` left margin. Shows a popover on hover with a small arrow.
+- `side` prop: `'top-start'` (default, left-aligns to icon — for sidebar labels), `'top-end'` (right-aligns — for centered buttons like Apply to all), `'top-center'`, `'bottom-start'`.
+- Used in FramePanel (Pos, Size, Tilt labels), BackgroundPanel (Apply to all), TextPanel (Apply to all).
+
+### HelpPanel (`src/components/HelpPanel.tsx`)
+
+- Slide-in panel from the right. Fixed position, full height, `w-72`, `z-50`. Backdrop closes it.
+- Opened via `HelpCircle` button in the header (next to the theme toggle).
+- Sections: Getting Started (4 steps), Keyboard Shortcuts (← →, ⌘D, ⌫), Pro Tips (4 items).
+- Detects Mac vs Windows via `navigator.platform` to show `⌘` or `Ctrl`.
 
 ### Keyboard shortcuts (`src/App.tsx`)
 

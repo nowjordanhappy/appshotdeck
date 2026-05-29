@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
+import { Tooltip } from '../Tooltip'
 
 const RESIZABLE_FORMATS = new Set(['phone', 'iphone-69', 'iphone-65', 'ipad-13', 'tablet-7', 'tablet-10'])
 const LANDSCAPE_FORMATS = new Set(['tablet-7', 'tablet-10'])
@@ -53,7 +54,9 @@ export function FramePanel() {
       {RESIZABLE_FORMATS.has(slide.format) && (
         <>
           <div className="flex items-center gap-2 pt-2 pr-1">
-            <span className="text-xs text-muted w-7 flex-shrink-0">Pos</span>
+            <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
+              Pos <Tooltip text={t('tips.pos')} />
+            </span>
             <input
               type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
               onChange={(e) => updateSlide(activeSlideId, { deviceOffset: Number(e.target.value) })}
@@ -87,7 +90,9 @@ export function FramePanel() {
             </button>
           </div>
           <div className="flex items-center gap-2 pr-1">
-            <span className="text-xs text-muted w-7 flex-shrink-0">Size</span>
+            <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
+              Size <Tooltip text={t('tips.size')} />
+            </span>
             <input
               type="range" min={60} max={100} value={slide.deviceScale ?? 100}
               onChange={(e) => updateSlide(activeSlideId, { deviceScale: Number(e.target.value) })}
@@ -107,7 +112,9 @@ export function FramePanel() {
 
       {activeFrame.tilt && (
         <div className="flex items-center gap-2 pt-2 pr-1">
-          <span className="text-xs text-muted w-7 flex-shrink-0">{t('frame.tilt')}</span>
+          <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
+            {t('frame.tilt')} <Tooltip text={t('tips.tilt')} />
+          </span>
           <input
             type="range" min={-60} max={60} value={slide.frameTilt}
             onChange={(e) => updateSlide(activeSlideId, { frameTilt: Number(e.target.value) })}

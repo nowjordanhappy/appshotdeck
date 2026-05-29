@@ -2,8 +2,14 @@
   "header": {
     "tagline": "Capturas para Play Store y App Store",
     "save": "Guardar",
+    "save_project": "Guardar proyecto",
+    "save_all": "Guardar todos los proyectos",
+    "save_all_desc": "Respalda todos los proyectos en un ZIP",
     "load": "Cargar",
-    "export_all": "Exportar PNGs",
+    "load_project": "Cargar proyecto",
+    "load_all": "Cargar todos los proyectos",
+    "load_all_desc": "Restaura todos los proyectos desde un ZIP",
+    "export_all": "Exportar diapositivas",
     "dark_mode": "Cambiar a modo oscuro",
     "light_mode": "Cambiar a modo claro"
   },
@@ -83,5 +89,38 @@
   },
   "projects": {
     "new": "Nuevo proyecto"
+  },
+  "tips": {
+    "pos": "Desplaza el dispositivo en el lienzo. 0 = centrado. Usa el botón de centrar para ajustarlo, o reinicia a la posición predeterminada.",
+    "size": "Escala el dispositivo de forma uniforme. 100% ocupa el tamaño de ranura predeterminado.",
+    "tilt": "Rota el marco 3D en perspectiva. Arrastra izquierda o derecha hasta ±60°.",
+    "apply_bg": "Copia el fondo de esta diapositiva a todas las demás del proyecto.",
+    "apply_text": "Copia fuente, tamaño, color, alineación y sombra a todas las demás diapositivas."
+  },
+  "help": {
+    "title": "Ayuda",
+    "start_title": "Primeros pasos",
+    "start_1": "Sube una captura en la pestaña Subir",
+    "start_2": "Elige un marco de dispositivo en la pestaña Marco",
+    "start_3": "Configura el fondo y edita el texto del título",
+    "start_4": "Haz clic en Exportar diapositivas para descargar los PNGs",
+    "shortcuts_title": "Atajos de teclado",
+    "shortcut_nav": "Navegar entre diapositivas",
+    "shortcut_dup": "Duplicar diapositiva activa",
+    "shortcut_del": "Eliminar diapositiva activa",
+    "tips_title": "Consejos avanzados",
+    "tip_apply": "Usa Aplicar a todas en los paneles de Fondo y Texto para sincronizar estilos en todas las diapositivas.",
+    "tip_save_all": "Guardar todos los proyectos hace una copia de todo tu espacio de trabajo — útil antes de cambiar de dispositivo.",
+    "tip_tilt": "Los marcos 3D tienen un control deslizante de Inclinación en la pestaña Marco. Arrástralo para añadir profundidad.",
+    "tip_slides": "Cada proyecto admite hasta 8 diapositivas, cada una con su propio formato, marco y fondo."
+  },
+  "workspace": {
+    "import_title": "Importar espacio de trabajo",
+    "found_projects": "{{count}} proyecto(s) encontrado(s).",
+    "conflicts_label": "Ya existen localmente:",
+    "skip": "Omitir existentes",
+    "replace": "Reemplazar existentes",
+    "cancel": "Cancelar",
+    "import": "Importar"
   }
 }

@@ -1,12 +1,68 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
-import { Download, Layers, Save, FolderOpen, Globe, Sun, Moon, ChevronDown, Plus, Check, Pencil, Trash2 } from 'lucide-react'
+import { Download, Layers, Save, FolderOpen, Globe, Sun, Moon, ChevronDown, Plus, Check, Pencil, Trash2, HelpCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
 import { useThemeStore } from '../store/useThemeStore'
 import { exportAll, type ExportEntry } from '../utils/export'
 import { saveProject, loadProject } from '../utils/project'
+import { saveWorkspace, loadWorkspace, type LoadedWorkspaceProject } from '../utils/workspace'
 import { saveScreenshot, deleteProjectScreenshots } from '../utils/db'
 import { ConfirmDialog } from './ConfirmDialog'
+import { WorkspaceImportDialog } from './WorkspaceImportDialog'
+import { HelpPanel } from './HelpPanel'
+import { useToastStore } from '../store/useToastStore'
+import type { ProjectMeta } from '../types'
+
+async function doImportWorkspace(
+  loadedProjects: LoadedWorkspaceProject[],
+  replace: boolean,
+): Promise<void> {
+  const { projects, activeProjectId } = useEditorStore.getState()
+  const existingIds = new Set(projects.map((p) => p.id))
+
+  const toImport = replace
+    ? loadedProjects
+    : loadedProjects.filter((lp) => !existingIds.has(lp.meta.id))
+
+  if (!toImport.length) return
+
+  if (replace) {
+    const idsToReplace = toImport.filter((lp) => existingIds.has(lp.meta.id)).map((lp) => lp.meta.id)
+    await Promise.all(idsToReplace.map(deleteProjectScreenshots))
+  }
+
+  await Promise.all(
+    toImport.flatMap(({ meta, screenshots }) =>
+      screenshots.map(({ slideId, dataUrl }) =>
+        saveScreenshot(`${meta.id}/${slideId}`, dataUrl)
+      )
+    )
+  )
+
+  const importedIds = new Set(toImport.map((lp) => lp.meta.id))
+  const importedMetas = new Map(toImport.map((lp) => [lp.meta.id, lp.meta]))
+
+  const updatedProjects: ProjectMeta[] = [
+    ...projects.map((p) => importedMetas.get(p.id) ?? p),
+    ...toImport.filter((lp) => !existingIds.has(lp.meta.id)).map((lp) => lp.meta),
+  ]
+
+  if (replace && importedIds.has(activeProjectId)) {
+    const replaced = toImport.find((lp) => lp.meta.id === activeProjectId)!
+    const screenshotMap = new Map(replaced.screenshots.map((s) => [s.slideId, s.dataUrl]))
+    const newSlides = replaced.meta.slides.map((config) => ({
+      ...config,
+      screenshotDataUrl: screenshotMap.get(config.id) ?? null,
+    }))
+    useEditorStore.setState({
+      projects: updatedProjects,
+      slides: newSlides,
+      activeSlideId: replaced.meta.activeSlideId || newSlides[0]?.id || '',
+    })
+  } else {
+    useEditorStore.setState({ projects: updatedProjects })
+  }
+}
 
 interface Props {
   canvasRefs: React.MutableRefObject<Map<string, HTMLDivElement>>
@@ -30,17 +86,24 @@ export function Header({ canvasRefs }: Props) {
   const { isDark, toggle: toggleTheme } = useThemeStore()
   const exporting = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const workspaceInputRef = useRef<HTMLInputElement>(null)
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [saveOpen, setSaveOpen] = useState(false)
+  const [loadOpen, setLoadOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
   const [pendingDeleteProject, setPendingDeleteProject] = useState<string | null>(null)
+  const [pendingWorkspace, setPendingWorkspace] = useState<LoadedWorkspaceProject[] | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const saveDropdownRef = useRef<HTMLDivElement>(null)
+  const loadDropdownRef = useRef<HTMLDivElement>(null)
 
   const activeProject = projects.find((p) => p.id === activeProjectId)
   const projectName = activeProject?.name ?? 'Project'
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     if (!dropdownOpen) return
     const handler = (e: MouseEvent) => {
@@ -51,6 +114,16 @@ export function Header({ canvasRefs }: Props) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [dropdownOpen])
+
+  useEffect(() => {
+    if (!saveOpen && !loadOpen) return
+    const handler = (e: MouseEvent) => {
+      if (saveOpen && saveDropdownRef.current && !saveDropdownRef.current.contains(e.target as Node)) setSaveOpen(false)
+      if (loadOpen && loadDropdownRef.current && !loadDropdownRef.current.contains(e.target as Node)) setLoadOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [saveOpen, loadOpen])
 
   const handleExportAll = useCallback(async () => {
     if (exporting.current) return
@@ -73,6 +146,44 @@ export function Header({ canvasRefs }: Props) {
     await saveProject(slides, projectName)
   }, [slides, projectName])
 
+  const handleSaveAll = useCallback(async () => {
+    const { projects, activeProjectId, slides: activeSlides, activeSlideId } = useEditorStore.getState()
+    await saveWorkspace(projects, activeProjectId, activeSlides, activeSlideId)
+  }, [])
+
+  const handleLoadAll = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    try {
+      const loaded = await loadWorkspace(file)
+      if (!loaded.length) return
+      const existingIds = new Set(useEditorStore.getState().projects.map((p) => p.id))
+      const hasConflicts = loaded.some((lp) => existingIds.has(lp.meta.id))
+      if (hasConflicts) {
+        setPendingWorkspace(loaded)
+      } else {
+        await doImportWorkspace(loaded, false)
+      }
+    } catch (err) {
+      useToastStore.getState().addToast(
+        `Could not load workspace: ${err instanceof Error ? err.message : String(err)}`, 'error'
+      )
+    }
+  }, [])
+
+  const handleWorkspaceConfirm = useCallback(async (replace: boolean) => {
+    if (!pendingWorkspace) return
+    try {
+      await doImportWorkspace(pendingWorkspace, replace)
+    } catch (err) {
+      useToastStore.getState().addToast(
+        `Import failed: ${err instanceof Error ? err.message : String(err)}`, 'error'
+      )
+    }
+    setPendingWorkspace(null)
+  }, [pendingWorkspace])
+
   const handleLoad = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -92,7 +203,9 @@ export function Header({ canvasRefs }: Props) {
         activeSlideId: loaded[0]?.id ?? activeSlideId,
       })
     } catch (err) {
-      alert(`Could not load project: ${err instanceof Error ? err.message : String(err)}`)
+      useToastStore.getState().addToast(
+        `Could not load project: ${err instanceof Error ? err.message : String(err)}`, 'error'
+      )
     }
     e.target.value = ''
   }, [activeSlideId])
@@ -231,18 +344,78 @@ export function Header({ canvasRefs }: Props) {
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        <div className="w-px h-6 bg-black/10 dark:bg-white/15" />
-
-        <button onClick={handleSave} className="flex items-center gap-1.5 px-3 py-2 text-sm btn-ghost">
-          <Save className="w-4 h-4" />
-          {t('header.save')}
+        {/* Help */}
+        <button
+          onClick={() => setHelpOpen(true)}
+          className="p-2 btn-ghost"
+          title={t('help.title')}
+        >
+          <HelpCircle className="w-4 h-4" />
         </button>
 
-        <label className="flex items-center gap-1.5 px-3 py-2 text-sm btn-ghost cursor-pointer">
-          <FolderOpen className="w-4 h-4" />
-          {t('header.load')}
+        <div className="w-px h-6 bg-black/10 dark:bg-white/15" />
+
+        {/* Save dropdown */}
+        <div className="relative" ref={saveDropdownRef}>
+          <button
+            onClick={() => { setSaveOpen(!saveOpen); setLoadOpen(false) }}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm btn-ghost"
+          >
+            <Save className="w-4 h-4" />
+            {t('header.save')}
+            <ChevronDown className="w-3 h-3 text-muted" />
+          </button>
+          {saveOpen && (
+            <div className="absolute top-full right-0 mt-1 w-48 surface border border-subtle rounded-lg shadow-lg z-50 py-1">
+              <button
+                onClick={() => { handleSave(); setSaveOpen(false) }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                {t('header.save_project')}
+              </button>
+              <div className="border-t border-subtle mx-2 my-0.5" />
+              <button
+                onClick={() => { handleSaveAll(); setSaveOpen(false) }}
+                className="w-full text-left px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                <div className="text-sm">{t('header.save_all')}</div>
+                <div className="text-xs text-muted mt-0.5">{t('header.save_all_desc')}</div>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Load dropdown */}
+        <div className="relative" ref={loadDropdownRef}>
+          <button
+            onClick={() => { setLoadOpen(!loadOpen); setSaveOpen(false) }}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm btn-ghost"
+          >
+            <FolderOpen className="w-4 h-4" />
+            {t('header.load')}
+            <ChevronDown className="w-3 h-3 text-muted" />
+          </button>
+          {loadOpen && (
+            <div className="absolute top-full right-0 mt-1 w-52 surface border border-subtle rounded-lg shadow-lg z-50 py-1">
+              <button
+                onClick={() => { fileInputRef.current?.click(); setLoadOpen(false) }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                {t('header.load_project')}
+              </button>
+              <div className="border-t border-subtle mx-2 my-0.5" />
+              <button
+                onClick={() => { workspaceInputRef.current?.click(); setLoadOpen(false) }}
+                className="w-full text-left px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                <div className="text-sm">{t('header.load_all')}</div>
+                <div className="text-xs text-muted mt-0.5">{t('header.load_all_desc')}</div>
+              </button>
+            </div>
+          )}
           <input ref={fileInputRef} type="file" accept=".zip" className="hidden" onChange={handleLoad} />
-        </label>
+          <input ref={workspaceInputRef} type="file" accept=".zip" className="hidden" onChange={handleLoadAll} />
+        </div>
 
         <div className="w-px h-6 bg-black/10 dark:bg-white/15" />
 
@@ -260,6 +433,19 @@ export function Header({ canvasRefs }: Props) {
           message={`Delete "${projects.find(p => p.id === pendingDeleteProject)?.name}"? This can't be undone.`}
           onConfirm={() => { deleteProject(pendingDeleteProject); setPendingDeleteProject(null) }}
           onCancel={() => setPendingDeleteProject(null)}
+        />
+      )}
+
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+
+      {pendingWorkspace && (
+        <WorkspaceImportDialog
+          total={pendingWorkspace.length}
+          conflictNames={pendingWorkspace
+            .filter((lp) => projects.some((p) => p.id === lp.meta.id))
+            .map((lp) => lp.meta.name)}
+          onConfirm={handleWorkspaceConfirm}
+          onCancel={() => setPendingWorkspace(null)}
         />
       )}
     </header>

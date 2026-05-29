@@ -1,6 +1,20 @@
 # AppShotDeck
 
+![AppShotDeck](docs/hero.png)
+
 A local, browser-only tool for composing Play Store and App Store marketing screenshots. Upload an app screenshot, wrap it in a device frame, add a headline and subtitle, set a background, and export at store-spec resolution — no server, no cloud, no account required.
+
+## Demo
+
+![3D frame demo](docs/demo-3d.gif)
+
+## Screenshots
+
+| Phone | Tablet |
+|---|---|
+| ![Phone](docs/screenshot-phone.png) | ![Tablet](docs/screenshot-tablet.png) |
+
+![Light theme](docs/screenshot-light.png)
 
 ## Features
 
@@ -16,10 +30,14 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Multi-project** — Create, rename, delete, and switch projects; each project has its own slides and screenshots
 - **Apply to all slides** — Copy background or text style from active slide to all others in one click
 - **Slide strip** — Up to 8 slides per project, drag to reorder, duplicate/remove, per-slide format badge
-- **Project save/load** — ZIP export (config.json + images/) and ZIP import; screenshots saved to IndexedDB on load
-- **Export** — Single PNG or all slides as a ZIP organized by format folder, named by project
+- **Project save/load** — ZIP export (config.json + images/) and ZIP import per project
+- **Workspace save/load** — Save All / Load All exports every project into one workspace ZIP; conflict dialog on import (skip or replace existing)
+- **Export Slides** — Single PNG or all slides as a ZIP organized by format folder, named by project
 - **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports
 - **Keyboard shortcuts** — `←/→` navigate slides, `Cmd+D` duplicate, `Delete` remove (with confirmation)
+- **Contextual tooltips** — `ⓘ` hints on non-obvious controls (Pos, Size, Tilt, Apply to all)
+- **Help panel** — Slide-in panel with getting started guide, keyboard shortcuts, and pro tips
+- **Toast notifications** — Non-blocking error and success feedback (replaces browser alert dialogs)
 - **Confirmation dialogs** — Styled modals for slide and project deletion
 - **Persistent** — Slide configs in localStorage (Zustand persist), screenshots in IndexedDB
 - **Offline-first** — All fonts bundled via @fontsource, no CDN dependencies

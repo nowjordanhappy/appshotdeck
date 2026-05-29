@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, CopyCheck, AlignLeft, AlignCenter, AlignRight, RotateCcw, ChevronDown, Check } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import type { TextAlign } from '../../types'
+import { Tooltip } from '../Tooltip'
 
 const FONTS = [
   'Inter',
@@ -255,6 +256,7 @@ export function TextPanel() {
       {slides.length > 1 && (
         <button
           onClick={() => applyToAllSlides({
+
             textColor: slide.textColor,
             subtitleColor: slide.subtitleColor,
             textPosition: slide.textPosition,
@@ -271,6 +273,7 @@ export function TextPanel() {
         >
           <CopyCheck className="w-3.5 h-3.5" />
           {t('text.apply_to_all')}
+          <Tooltip text={t('tips.apply_text')} side="top-end" />
         </button>
       )}
     </div>

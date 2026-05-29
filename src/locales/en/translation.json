@@ -2,8 +2,14 @@
   "header": {
     "tagline": "Play Store & App Store screenshots",
     "save": "Save",
+    "save_project": "Save Project",
+    "save_all": "Save All Projects",
+    "save_all_desc": "Back up every project as one ZIP",
     "load": "Load",
-    "export_all": "Export PNGs",
+    "load_project": "Load Project",
+    "load_all": "Load All Projects",
+    "load_all_desc": "Restore all projects from a workspace ZIP",
+    "export_all": "Export Slides",
     "dark_mode": "Switch to dark mode",
     "light_mode": "Switch to light mode"
   },
@@ -83,5 +89,38 @@
   },
   "projects": {
     "new": "New Project"
+  },
+  "tips": {
+    "pos": "Shifts the device on the canvas. 0 = centered. Use the center button to snap to center, or reset to the default layout position.",
+    "size": "Scales the device up or down uniformly. 100% fills the default slot size.",
+    "tilt": "Rotates the 3D frame in perspective. Drag left or right up to ±60°.",
+    "apply_bg": "Copies this slide's background to every other slide in the project.",
+    "apply_text": "Copies font, size, color, alignment and shadow to every other slide."
+  },
+  "help": {
+    "title": "Help",
+    "start_title": "Getting started",
+    "start_1": "Upload a screenshot in the Upload tab",
+    "start_2": "Pick a device frame in the Frame tab",
+    "start_3": "Set a background and edit headline text",
+    "start_4": "Click Export Slides to download PNGs",
+    "shortcuts_title": "Keyboard shortcuts",
+    "shortcut_nav": "Navigate between slides",
+    "shortcut_dup": "Duplicate active slide",
+    "shortcut_del": "Remove active slide",
+    "tips_title": "Pro tips",
+    "tip_apply": "Use Apply to all in the Background and Text panels to sync a style across every slide at once.",
+    "tip_save_all": "Save All Projects backs up your entire workspace — handy before switching devices.",
+    "tip_tilt": "3D frames have a Tilt slider in the Frame tab. Drag it to add perspective depth.",
+    "tip_slides": "Each project supports up to 8 slides, each with its own format, frame, and background."
+  },
+  "workspace": {
+    "import_title": "Import Workspace",
+    "found_projects": "{{count}} project(s) found.",
+    "conflicts_label": "Already exist locally:",
+    "skip": "Skip existing",
+    "replace": "Replace existing",
+    "cancel": "Cancel",
+    "import": "Import"
   }
 }

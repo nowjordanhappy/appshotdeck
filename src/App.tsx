@@ -3,6 +3,7 @@ import { Download } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Header } from './components/Header'
 import { ConfirmDialog } from './components/ConfirmDialog'
+import { ToastContainer } from './components/ToastContainer'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
 import { SlideStrip } from './components/SlideStrip'
@@ -159,6 +160,8 @@ export default function App() {
           onCancel={() => setPendingDelete(null)}
         />
       )}
+
+      <ToastContainer />
     </div>
   )
 }
