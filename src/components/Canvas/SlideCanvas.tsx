@@ -4,10 +4,12 @@ import type { Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
+import { CalloutLayer } from './CalloutLayer'
 
 interface Props {
   slide: Slide
   scale?: number
+  interactive?: boolean
 }
 
 interface FormatConfig {
@@ -38,7 +40,7 @@ function bgStyle(bg: Slide['background']): CSSProperties {
 }
 
 export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
-  ({ slide, scale = 1 }, ref) => {
+  ({ slide, scale = 1, interactive = true }, ref) => {
     const fmt = FORMAT[slide.format]
     const { W, H, slotW, slotH, landscape, frameViewBox } = fmt
     const frame = frameById(slide.frame)
@@ -201,6 +203,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
             </div>
           )}
         </div>
+
+        <CalloutLayer
+          slide={slide}
+          slotX={slotX} slotY={slotY}
+          slotW={dSlotW} slotH={dSlotH}
+          W={W} H={H}
+          interactive={interactive}
+        />
       </div>
     )
   }

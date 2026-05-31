@@ -29,7 +29,8 @@
       "upload": "Subir",
       "frame": "Marco",
       "background": "Fondo",
-      "text": "Texto"
+      "text": "Texto",
+      "callout": "Callout"
     }
   },
   "upload": {
@@ -113,6 +114,20 @@
     "tip_save_all": "Guardar todos los proyectos hace una copia de todo tu espacio de trabajo — útil antes de cambiar de dispositivo.",
     "tip_tilt": "Los marcos 3D tienen un control deslizante de Inclinación en la pestaña Marco. Arrástralo para añadir profundidad.",
     "tip_slides": "Cada proyecto admite hasta 8 diapositivas, cada una con su propio formato, marco y fondo."
+  },
+  "callout": {
+    "add": "Agregar callout",
+    "hint": "Arrastra sobre la captura para crear un zoom callout",
+    "hint_max": "Máximo 3 callouts — elimina uno para agregar otro",
+    "empty": "Sin callouts todavía",
+    "callout": "Callout",
+    "zoom": "Zoom",
+    "shape": "Forma",
+    "shape_circle": "Círculo",
+    "shape_rect": "Rect",
+    "size": "Tamaño",
+    "position": "Posición",
+    "remove": "Eliminar callout"
   },
   "workspace": {
     "import_title": "Importar espacio de trabajo",

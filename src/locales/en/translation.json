@@ -29,7 +29,8 @@
       "upload": "Upload",
       "frame": "Frame",
       "background": "BG",
-      "text": "Text"
+      "text": "Text",
+      "callout": "Callout"
     }
   },
   "upload": {
@@ -113,6 +114,20 @@
     "tip_save_all": "Save All Projects backs up your entire workspace — handy before switching devices.",
     "tip_tilt": "3D frames have a Tilt slider in the Frame tab. Drag it to add perspective depth.",
     "tip_slides": "Each project supports up to 8 slides, each with its own format, frame, and background."
+  },
+  "callout": {
+    "add": "Add callout",
+    "hint": "Drag on the screenshot to create a zoom callout",
+    "hint_max": "Max 3 callouts — remove one to add another",
+    "empty": "No callouts yet",
+    "callout": "Callout",
+    "zoom": "Zoom",
+    "shape": "Shape",
+    "shape_circle": "Circle",
+    "shape_rect": "Rect",
+    "size": "Size",
+    "position": "Position",
+    "remove": "Remove callout"
   },
   "workspace": {
     "import_title": "Import Workspace",

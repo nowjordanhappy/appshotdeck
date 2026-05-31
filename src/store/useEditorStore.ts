@@ -44,6 +44,7 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   subtitleFontSize: 100,
   textAlign: 'center',
   textShadow: 'off',
+  callouts: [],
 })
 
 function toConfig({ screenshotDataUrl: _, ...rest }: Slide): SlideConfig {

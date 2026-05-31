@@ -24,6 +24,19 @@ export type Background =
 export type TextPosition = 'top' | 'bottom'
 export type TextAlign = 'left' | 'center' | 'right'
 
+export interface Callout {
+  id: string
+  selX: number      // % of slot width  (0–100)
+  selY: number      // % of slot height (0–100)
+  selW: number      // % of slot width
+  selH: number      // % of slot height
+  bubbleX: number   // % of canvas width  (center)
+  bubbleY: number   // % of canvas height (center)
+  bubbleSize: number // diameter as % of canvas width
+  shape: 'circle' | 'rect'
+  showLine: boolean
+}
+
 export interface Slide {
   id: string
   format: SlideFormat
@@ -48,6 +61,7 @@ export interface Slide {
   subtitleFontSize: number
   textAlign: TextAlign
   textShadow: 'off' | 'dark' | 'light'
+  callouts: Callout[]
 }
 
 export type SlideConfig = Omit<Slide, 'screenshotDataUrl'>

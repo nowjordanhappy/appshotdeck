@@ -1,16 +1,17 @@
 import { useState } from 'react'
-import { Upload, Smartphone, Image, Type, Monitor } from 'lucide-react'
+import { Upload, Smartphone, Image, Type, Monitor, ZoomIn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UploadPanel } from './UploadPanel'
 import { FramePanel } from './FramePanel'
 import { BackgroundPanel } from './BackgroundPanel'
 import { TextPanel } from './TextPanel'
+import { CalloutPanel } from './CalloutPanel'
 import { useEditorStore } from '../../store/useEditorStore'
 import { defaultFrameForFormat } from '../../store/useEditorStore'
 import { framesForFormat } from '../../data/frames'
 import type { SlideFormat } from '../../types'
 
-type Tab = 'upload' | 'frame' | 'background' | 'text'
+type Tab = 'upload' | 'frame' | 'background' | 'text' | 'callout'
 type Platform = 'android' | 'ios'
 
 export function Sidebar() {
@@ -25,6 +26,7 @@ export function Sidebar() {
     { id: 'frame',      label: t('sidebar.tabs.frame'),      icon: <Smartphone className="w-4 h-4" /> },
     { id: 'background', label: t('sidebar.tabs.background'), icon: <Image className="w-4 h-4" /> },
     { id: 'text',       label: t('sidebar.tabs.text'),       icon: <Type className="w-4 h-4" /> },
+    { id: 'callout',    label: t('sidebar.tabs.callout'),    icon: <ZoomIn className="w-4 h-4" /> },
   ]
 
   const ANDROID_FORMATS: { id: SlideFormat; label: string; sub: string }[] = [
@@ -123,6 +125,7 @@ export function Sidebar() {
         {tab === 'frame'      && <FramePanel />}
         {tab === 'background' && <BackgroundPanel />}
         {tab === 'text'       && <TextPanel />}
+        {tab === 'callout'    && <CalloutPanel />}
       </div>
     </aside>
   )

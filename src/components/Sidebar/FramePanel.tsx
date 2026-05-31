@@ -94,7 +94,7 @@ export function FramePanel() {
               Size <Tooltip text={t('tips.size')} />
             </span>
             <input
-              type="range" min={60} max={100} value={slide.deviceScale ?? 100}
+              type="range" min={60} max={LANDSCAPE_FORMATS.has(slide.format) || slide.format === 'ipad-13' ? 180 : 150} value={slide.deviceScale ?? 100}
               onChange={(e) => updateSlide(activeSlideId, { deviceScale: Number(e.target.value) })}
               className="flex-1 min-w-0"
             />
