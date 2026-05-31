@@ -35,6 +35,7 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
   const [slotDrag, setSlotDrag] = useState<SlotDrag | null>(null)
   const [isDraggingBubble, setIsDraggingBubble] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [isOverSlot, setIsOverSlot] = useState(false)
   const overlayRef    = useRef<HTMLDivElement>(null)
   const bubbleDragRef = useRef<BubbleDrag | null>(null)
 
@@ -61,7 +62,8 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
 
   // ── Hit-test a canvas point against all bubbles ────────────────────────────
   const hitBubble = (cpx: number, cpy: number): Callout | null => {
-    for (const c of callouts) {
+    for (let i = callouts.length - 1; i >= 0; i--) {
+      const c = callouts[i]
       const bubD      = c.bubbleSize / 100 * W
       const bubCX     = c.bubbleX / 100 * W
       const bubCY     = c.bubbleY / 100 * H
@@ -169,8 +171,9 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!slotDrag) return
     const { x, y } = toCanvasPx(e.clientX, e.clientY)
+    setIsOverSlot(inSlot(x, y))
+    if (!slotDrag) return
     const { x: sx, y: sy } = toSlotPct(x, y)
     setSlotDrag(d => d ? { ...d, curX: sx, curY: sy } : null)
   }
@@ -213,12 +216,13 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
           ref={overlayRef}
           style={{
             position: 'absolute', inset: 0,
-            cursor: isDraggingBubble ? 'grabbing' : (callouts.length >= 3 ? 'default' : 'crosshair'),
+            cursor: isDraggingBubble ? 'grabbing' : (isOverSlot && callouts.length < 3 ? 'crosshair' : 'default'),
             zIndex: 35,
           }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onMouseLeave={() => setIsOverSlot(false)}
         >
           {preview && (
             <div style={{

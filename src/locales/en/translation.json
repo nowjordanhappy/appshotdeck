@@ -113,7 +113,12 @@
     "tip_apply": "Use Apply to all in the Background and Text panels to sync a style across every slide at once.",
     "tip_save_all": "Save All Projects backs up your entire workspace — handy before switching devices.",
     "tip_tilt": "3D frames have a Tilt slider in the Frame tab. Drag it to add perspective depth.",
-    "tip_slides": "Each project supports up to 8 slides, each with its own format, frame, and background."
+    "tip_slides": "Each project supports up to 8 slides, each with its own format, frame, and background.",
+    "callout_title": "Zoom Callouts",
+    "callout_1": "Go to the Callout tab in the sidebar",
+    "callout_2": "Drag a rectangle on the screenshot to define the area to zoom",
+    "callout_3": "A zoom bubble appears — drag it anywhere on the canvas to reposition",
+    "callout_4": "Click a bubble to select it, then press Delete to remove it"
   },
   "callout": {
     "add": "Add callout",

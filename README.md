@@ -35,6 +35,7 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Export Slides** — Single PNG or all slides as a ZIP organized by format folder, named by project
 - **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports
 - **Keyboard shortcuts** — `←/→` navigate slides, `Cmd+D` duplicate, `Delete` remove (with confirmation)
+- **Zoom callouts** — Drag a rectangle on the screenshot to create a magnified zoom bubble; drag the bubble anywhere on the canvas to reposition; up to 3 per slide; circle or rect shape; exports with the slide PNG
 - **Contextual tooltips** — `ⓘ` hints on non-obvious controls (Pos, Size, Tilt, Apply to all)
 - **Help panel** — Slide-in panel with getting started guide, keyboard shortcuts, and pro tips
 - **Toast notifications** — Non-blocking error and success feedback (replaces browser alert dialogs)

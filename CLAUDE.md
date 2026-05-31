@@ -112,6 +112,17 @@ Critical details for the 3D renderer:
 - `side` prop: `'top-start'` (default, left-aligns to icon — for sidebar labels), `'top-end'` (right-aligns — for centered buttons like Apply to all), `'top-center'`, `'bottom-start'`.
 - Used in FramePanel (Pos, Size, Tilt labels), BackgroundPanel (Apply to all), TextPanel (Apply to all).
 
+### Zoom Callouts (`src/components/Canvas/CalloutLayer.tsx`, `src/components/Sidebar/CalloutPanel.tsx`)
+
+- **State**: `callouts: Callout[]` on each `Slide`. Max 3 per slide. Persisted to localStorage via `SlideConfig`.
+- **Callout fields**: `selX/Y/W/H` (% of slot), `bubbleX/Y` (% of canvas, center), `bubbleSize` (% of canvas width), `shape: 'circle'|'rect'`, `showLine: boolean`.
+- **Creating**: Full-canvas transparent overlay (`zIndex: 35`) detects mouse position. Crosshair cursor only when hovering over the slot. Drag creates a selection rect; on mouseup creates a `Callout` with `bubbleX/Y: 50` (canvas center).
+- **Moving**: `onMouseDown` hit-tests all bubbles in reverse order (topmost first). If hit → starts `bubbleDragRef` drag via `window` listeners. `useEditorStore.getState()` reads fresh state inside the listener to avoid stale closures.
+- **Rendering (zoom bubble)**: Auto-fit zoom = `bubW / selPixW`. The screenshot `<img>` is positioned at `imgLeft = bubW/2 - selCenterX * effectiveZoom` to center the selection in the bubble. `maxWidth: 'none'` overrides Tailwind's global `max-width: 100%` which would otherwise kill the zoom. Rect shape: `bubH = bubD / selAspect` so the bubble matches the selection's aspect ratio.
+- **Selection**: `selectedId` state in `CalloutLayer`. Click bubble → select (indigo inset ring). Click outside overlay or outside canvas (document `mousedown` listener) → deselect. `Delete`/`Backspace` with `stopImmediatePropagation` (capture phase) removes selected callout without triggering slide deletion in `App.tsx`.
+- **Export**: `interactive={false}` on hidden export canvases skips the overlay but renders bubbles normally. `html-to-image` captures them as DOM elements.
+- **Panel controls**: Shape toggle, size slider (40–90%), and per-callout center-H / center-V / center-both buttons.
+
 ### HelpPanel (`src/components/HelpPanel.tsx`)
 
 - Slide-in panel from the right. Fixed position, full height, `w-72`, `z-50`. Backdrop closes it.

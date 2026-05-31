@@ -113,7 +113,12 @@
     "tip_apply": "Usa Aplicar a todas en los paneles de Fondo y Texto para sincronizar estilos en todas las diapositivas.",
     "tip_save_all": "Guardar todos los proyectos hace una copia de todo tu espacio de trabajo — útil antes de cambiar de dispositivo.",
     "tip_tilt": "Los marcos 3D tienen un control deslizante de Inclinación en la pestaña Marco. Arrástralo para añadir profundidad.",
-    "tip_slides": "Cada proyecto admite hasta 8 diapositivas, cada una con su propio formato, marco y fondo."
+    "tip_slides": "Cada proyecto admite hasta 8 diapositivas, cada una con su propio formato, marco y fondo.",
+    "callout_title": "Zoom Callouts",
+    "callout_1": "Ve a la pestaña Callout en la barra lateral",
+    "callout_2": "Arrastra un rectángulo sobre la captura para definir el área a ampliar",
+    "callout_3": "Aparece una burbuja de zoom — arrástrala a cualquier parte del lienzo",
+    "callout_4": "Haz clic en una burbuja para seleccionarla y presiona Eliminar para quitarla"
   },
   "callout": {
     "add": "Agregar callout",
