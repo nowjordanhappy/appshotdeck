@@ -115,6 +115,17 @@ src/
 
 **Text shadow** — Shadow blur scales with canvas width (`W * 0.025`). Color is chosen based on background luminance: dark background → white glow, light background → dark shadow.
 
+## Contributing
+
+Contributions are welcome! If you have an idea for a new frame style, background preset, export format, or any other improvement, feel free to open a pull request.
+
+1. Fork the repo and create a branch from `main`
+2. Make your changes (`npm run dev` to test locally)
+3. Run `npm run lint` and make sure there are no errors
+4. Open a PR with a clear description of what you changed and why
+
+For larger features, opening an issue first to discuss the approach is appreciated.
+
 ## License
 
 MIT
