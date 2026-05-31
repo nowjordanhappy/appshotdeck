@@ -29,7 +29,7 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Text shadow** — Off / Dark / Light, auto-sizes to canvas resolution
 - **Multi-project** — Create, rename, delete, and switch projects; each project has its own slides and screenshots
 - **Apply to all slides** — Copy background or text style from active slide to all others in one click
-- **Slide strip** — Up to 8 slides per project, drag to reorder, duplicate/remove, per-slide format badge
+- **Slide strip** — Up to 20 slides per project, drag to reorder, duplicate/remove, per-slide format badge
 - **Project save/load** — ZIP export (config.json + images/) and ZIP import per project
 - **Workspace save/load** — Save All / Load All exports every project into one workspace ZIP; conflict dialog on import (skip or replace existing)
 - **Export Slides** — Single PNG or all slides as a ZIP organized by format folder, named by project

@@ -20,7 +20,18 @@ export function SlideStrip() {
   const [overIdx, setOverIdx] = useState<number | null>(null)
 
   return (
-    <div className="h-28 flex-shrink-0 surface border-t border-subtle flex items-center gap-3 px-4 overflow-x-auto">
+    <div
+      className="h-28 flex-shrink-0 surface border-t border-subtle flex items-center gap-3 px-4 overflow-x-auto"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault()
+        if (dragIdx !== null && overIdx !== null && dragIdx !== overIdx) {
+          reorderSlides(dragIdx, overIdx)
+        }
+        setDragIdx(null)
+        setOverIdx(null)
+      }}
+    >
       {slides.map((slide, idx) => {
         const isActive = slide.id === activeSlideId
         const bg = slide.background
@@ -46,6 +57,7 @@ export function SlideStrip() {
             onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
             onDrop={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               if (dragIdx !== null && dragIdx !== idx) reorderSlides(dragIdx, idx)
               setDragIdx(null); setOverIdx(null)
             }}
@@ -86,12 +98,26 @@ export function SlideStrip() {
         )
       })}
 
-      {slides.length < 8 && (
-        <button onClick={addSlide}
-          className="flex-shrink-0 w-12 h-20 rounded-lg border-2 border-dashed border-black/20 dark:border-white/20 hover:border-indigo-400 hover:bg-indigo-500/10 flex items-center justify-center transition-all">
+      <button
+          onClick={addSlide}
+          onDragOver={(e) => { e.preventDefault(); setOverIdx(slides.length) }}
+          onDragLeave={() => setOverIdx(null)}
+          onDrop={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (dragIdx !== null && dragIdx !== slides.length - 1) {
+              reorderSlides(dragIdx, slides.length - 1)
+            }
+            setDragIdx(null); setOverIdx(null)
+          }}
+          className={`flex-shrink-0 w-12 h-20 rounded-lg border-2 border-dashed transition-all flex items-center justify-center ${
+            overIdx === slides.length
+              ? 'border-indigo-400 bg-indigo-500/10'
+              : 'border-black/20 dark:border-white/20 hover:border-indigo-400 hover:bg-indigo-500/10'
+          }`}
+        >
           <Plus className="w-5 h-5 text-muted" />
         </button>
-      )}
     </div>
   )
 }
