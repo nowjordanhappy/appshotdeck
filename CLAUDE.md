@@ -152,6 +152,18 @@ Critical details for the 3D renderer:
 | tablet-7 | 1920×1080 | 1000×625 | 960 |
 | tablet-10 | 2560×1440 | 1360×850 | 960 |
 
+### Slide Translations (`src/utils/translate.ts`, `src/components/AddLanguageDialog.tsx`, `src/components/Sidebar/TranslationsSection.tsx`)
+
+- **Data model**: each `Slide` has `textVariants?: Record<string, TextVariant>`. `TextVariant` = `{ headline, subtitle, status, fromHeadline?, fromSubtitle? }`. `status`: `'ok' | 'empty' | 'error' | 'stale'`.
+- `fromHeadline`/`fromSubtitle` store the EN source text at translation time — used to auto-clear `stale` when the user restores the original text.
+- **Store fields** (top-level, per-project): `languages: string[]`, `activeLanguage: string`, `protectedWords: string[]`. All saved into `ProjectMeta` and restored on `switchProject`/`createProject`.
+- **API**: MyMemory free REST (`https://api.mymemory.translated.net/get?q=...&langpair=en|{to}&de={email}`). No key required; `de=email` doubles daily limit (500→1000 words). Quota detected via `data.quotaFinished === true` → shows `QuotaDialog`.
+- **Protected words**: tokenized before sending (`XPROT0X`, `XPROT1X`, …), restored after. Case-insensitive match. Stored as `string[]` in store — chips UI in `TranslationsSection`.
+- **Stale detection**: editing EN headline/subtitle calls `markVariantsStale` unless the new value matches `variant.fromHeadline` → then calls `updateTextVariant(..., { status: 'ok' })` to restore.
+- **Canvas preview**: `activeLanguage` controls which text `displaySlide` shows in the main canvas. Language switcher dropdown (`LangDropdown`) always visible above canvas; `+` button opens `AddLanguageDialog`.
+- **Export**: `exportLanguage` state in `App.tsx` controls what `HiddenExportCanvases` renders. Uses `flushSync` to force re-render before `html-to-image` captures. Export button becomes dropdown when `languages.length > 0`: per-language + "Export all languages".
+- **Email storage key**: `appshotdeck-translate-email` in localStorage.
+
 ## Conventions
 
 - No comments unless the WHY is non-obvious.

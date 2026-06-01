@@ -4,6 +4,7 @@ import { Eye, EyeOff, CopyCheck, AlignLeft, AlignCenter, AlignRight, RotateCcw, 
 import { useEditorStore } from '../../store/useEditorStore'
 import type { TextAlign } from '../../types'
 import { Tooltip } from '../Tooltip'
+import { TranslationsSection } from './TranslationsSection'
 
 const FONTS = [
   'Inter',
@@ -163,16 +164,45 @@ function TextBlock({
 
 export function TextPanel() {
   const { t } = useTranslation()
-  const { slides, activeSlideId, updateSlide, applyToAllSlides } = useEditorStore()
+  const { slides, activeSlideId, updateSlide, applyToAllSlides, languages, markVariantsStale, updateTextVariant } = useEditorStore()
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
 
+  function handleHeadlineChange(v: string) {
+    const s = slide!
+    updateSlide(activeSlideId, { headline: v })
+    if (languages.length > 0) {
+      languages.forEach((lang) => {
+        const variant = s.textVariants?.[lang]
+        if (!variant || variant.status === 'empty') return
+        const isBack = variant.fromHeadline !== undefined && v === variant.fromHeadline
+        if (isBack) updateTextVariant(activeSlideId, lang, { status: 'ok' })
+        else markVariantsStale(activeSlideId, lang)
+      })
+    }
+  }
+
+  function handleSubtitleChange(v: string) {
+    const s = slide!
+    updateSlide(activeSlideId, { subtitle: v })
+    if (languages.length > 0) {
+      languages.forEach((lang) => {
+        const variant = s.textVariants?.[lang]
+        if (!variant || variant.status === 'empty') return
+        const isBack = variant.fromSubtitle !== undefined && v === variant.fromSubtitle
+        if (isBack) updateTextVariant(activeSlideId, lang, { status: 'ok' })
+        else markVariantsStale(activeSlideId, lang)
+      })
+    }
+  }
+
   return (
+    <>
     <div className="p-4 space-y-4">
       <TextBlock
         label={t('text.headline')}
         text={slide.headline}
-        onTextChange={(v) => updateSlide(activeSlideId, { headline: v })}
+        onTextChange={handleHeadlineChange}
         placeholder={t('text.headline_placeholder')}
         visible={slide.showHeadline ?? true}
         onToggleVisible={() => updateSlide(activeSlideId, { showHeadline: !(slide.showHeadline ?? true) })}
@@ -193,7 +223,7 @@ export function TextPanel() {
       <TextBlock
         label={t('text.subtitle')}
         text={slide.subtitle}
-        onTextChange={(v) => updateSlide(activeSlideId, { subtitle: v })}
+        onTextChange={handleSubtitleChange}
         placeholder={t('text.subtitle_placeholder')}
         visible={slide.showSubtitle ?? true}
         onToggleVisible={() => updateSlide(activeSlideId, { showSubtitle: !(slide.showSubtitle ?? true) })}
@@ -277,5 +307,7 @@ export function TextPanel() {
         </button>
       )}
     </div>
+    <TranslationsSection />
+    </>
   )
 }

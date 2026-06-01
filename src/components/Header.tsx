@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { Download, Layers, Save, FolderOpen, Globe, Sun, Moon, ChevronDown, Plus, Check, Pencil, Trash2, HelpCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
@@ -11,6 +12,7 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { WorkspaceImportDialog } from './WorkspaceImportDialog'
 import { HelpPanel } from './HelpPanel'
 import { useToastStore } from '../store/useToastStore'
+import { getLangMeta } from '../utils/translate'
 import type { ProjectMeta } from '../types'
 
 async function doImportWorkspace(
@@ -66,6 +68,7 @@ async function doImportWorkspace(
 
 interface Props {
   canvasRefs: React.MutableRefObject<Map<string, HTMLDivElement>>
+  setExportLanguage: (lang: string) => void
 }
 
 const LANGS = [
@@ -80,9 +83,9 @@ function projectColor(id: string): string {
   return PROJECT_COLORS[hash % PROJECT_COLORS.length]
 }
 
-export function Header({ canvasRefs }: Props) {
+export function Header({ canvasRefs, setExportLanguage }: Props) {
   const { t, i18n } = useTranslation()
-  const { slides, activeSlideId, projects, activeProjectId, switchProject, createProject, renameProject, deleteProject } = useEditorStore()
+  const { slides, activeSlideId, projects, activeProjectId, languages, switchProject, createProject, renameProject, deleteProject } = useEditorStore()
   const { isDark, toggle: toggleTheme } = useThemeStore()
   const exporting = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -91,6 +94,7 @@ export function Header({ canvasRefs }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
   const [loadOpen, setLoadOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
@@ -99,6 +103,7 @@ export function Header({ canvasRefs }: Props) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const saveDropdownRef = useRef<HTMLDivElement>(null)
   const loadDropdownRef = useRef<HTMLDivElement>(null)
+  const exportDropdownRef = useRef<HTMLDivElement>(null)
 
   const activeProject = projects.find((p) => p.id === activeProjectId)
   const projectName = activeProject?.name ?? 'Project'
@@ -116,31 +121,46 @@ export function Header({ canvasRefs }: Props) {
   }, [dropdownOpen])
 
   useEffect(() => {
-    if (!saveOpen && !loadOpen) return
+    if (!saveOpen && !loadOpen && !exportOpen) return
     const handler = (e: MouseEvent) => {
       if (saveOpen && saveDropdownRef.current && !saveDropdownRef.current.contains(e.target as Node)) setSaveOpen(false)
       if (loadOpen && loadDropdownRef.current && !loadDropdownRef.current.contains(e.target as Node)) setLoadOpen(false)
+      if (exportOpen && exportDropdownRef.current && !exportDropdownRef.current.contains(e.target as Node)) setExportOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [saveOpen, loadOpen])
+  }, [saveOpen, loadOpen, exportOpen])
 
-  const handleExportAll = useCallback(async () => {
+  const buildEntries = useCallback(() =>
+    slides
+      .map((sl, idx) => {
+        const el = canvasRefs.current.get(sl.id)
+        if (!el) return null
+        return { el, format: sl.format, name: `slide-${idx + 1}` } satisfies ExportEntry
+      })
+      .filter(Boolean) as ExportEntry[]
+  , [slides, canvasRefs])
+
+  const handleExportLanguage = useCallback(async (lang: string) => {
     if (exporting.current) return
     exporting.current = true
     try {
-      const entries = slides
-        .map((sl, idx) => {
-          const el = canvasRefs.current.get(sl.id)
-          if (!el) return null
-          return { el, format: sl.format, name: `slide-${idx + 1}` } satisfies ExportEntry
-        })
-        .filter(Boolean) as ExportEntry[]
-      await exportAll(entries, projectName)
+      flushSync(() => setExportLanguage(lang))
+      const suffix = lang === 'en' ? '' : `-${lang}`
+      await exportAll(buildEntries(), `${projectName}${suffix}`)
     } finally {
+      flushSync(() => setExportLanguage('en'))
       exporting.current = false
     }
-  }, [slides, canvasRefs, projectName])
+  }, [buildEntries, projectName, setExportLanguage])
+
+  const handleExportAll = useCallback(async () => {
+    if (exporting.current) return
+    const langs = languages.length > 0 ? ['en', ...languages] : ['en']
+    for (const lang of langs) {
+      await handleExportLanguage(lang)
+    }
+  }, [languages, handleExportLanguage])
 
   const handleSave = useCallback(async () => {
     await saveProject(slides, projectName)
@@ -432,13 +452,55 @@ export function Header({ canvasRefs }: Props) {
 
         <div className="w-px h-6 bg-black/10 dark:bg-white/15" />
 
-        <button
-          onClick={handleExportAll}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <Download className="w-4 h-4" />
-          {t('header.export_all')}
-        </button>
+        {languages.length > 0 ? (
+          <div className="relative" ref={exportDropdownRef}>
+            <button
+              onClick={() => { setExportOpen(!exportOpen); setSaveOpen(false); setLoadOpen(false) }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              {t('header.export_all')}
+              <ChevronDown className="w-3 h-3 opacity-70" />
+            </button>
+            {exportOpen && (
+              <div className="absolute top-full right-0 mt-1 w-52 surface border border-subtle rounded-lg shadow-lg z-50 py-1">
+                <button
+                  onClick={() => { handleExportLanguage('en'); setExportOpen(false) }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5"
+                >
+                  {t('header.export_lang', { lang: 'EN' })}
+                </button>
+                {languages.map((code) => {
+                  const meta = getLangMeta(code)
+                  return (
+                    <button
+                      key={code}
+                      onClick={() => { handleExportLanguage(code); setExportOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5"
+                    >
+                      {t('header.export_lang', { lang: (meta?.code ?? code).toUpperCase() })}
+                    </button>
+                  )
+                })}
+                <div className="border-t border-subtle mx-2 my-0.5" />
+                <button
+                  onClick={() => { handleExportAll(); setExportOpen(false) }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5"
+                >
+                  {t('header.export_all_langs')}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={handleExportAll}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            {t('header.export_all')}
+          </button>
+        )}
       </div>
 
       {pendingDeleteProject && (

@@ -24,6 +24,16 @@ export type Background =
 export type TextPosition = 'top' | 'bottom'
 export type TextAlign = 'left' | 'center' | 'right'
 
+export type TextVariantStatus = 'ok' | 'empty' | 'error' | 'stale'
+
+export interface TextVariant {
+  headline: string
+  subtitle: string
+  status: TextVariantStatus
+  fromHeadline?: string
+  fromSubtitle?: string
+}
+
 export interface Callout {
   id: string
   selX: number      // % of slot width  (0–100)
@@ -62,6 +72,7 @@ export interface Slide {
   textAlign: TextAlign
   textShadow: 'off' | 'dark' | 'light'
   callouts: Callout[]
+  textVariants?: Record<string, TextVariant>
 }
 
 export type SlideConfig = Omit<Slide, 'screenshotDataUrl'>
@@ -72,6 +83,8 @@ export interface ProjectMeta {
   createdAt: number
   slides: SlideConfig[]
   activeSlideId: string
+  languages?: string[]
+  protectedWords?: string[]
 }
 
 export interface EditorState {
@@ -90,4 +103,13 @@ export interface EditorState {
   renameProject: (id: string, name: string) => void
   deleteProject: (id: string) => void
   switchProject: (id: string) => Promise<void>
+  addLanguage: (code: string, variants: Record<string, TextVariant>) => void
+  removeLanguage: (code: string) => void
+  updateTextVariant: (slideId: string, lang: string, patch: Partial<TextVariant>) => void
+  markVariantsStale: (slideId: string, lang: string) => void
+  activeLanguage: string
+  setActiveLanguage: (lang: string) => void
+  languages: string[]
+  protectedWords: string[]
+  setProtectedWords: (words: string[]) => void
 }

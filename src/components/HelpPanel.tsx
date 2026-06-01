@@ -75,6 +75,20 @@ export function HelpPanel({ onClose }: Props) {
 
           <div className="border-t border-subtle" />
 
+          {/* Translations */}
+          <section className="space-y-2">
+            <p className="text-xs text-muted uppercase tracking-wider">{t('help.translate_title')}</p>
+            <ol className="space-y-1.5 list-decimal list-inside text-dim leading-snug">
+              <li>{t('help.translate_1')}</li>
+              <li>{t('help.translate_2')}</li>
+              <li>{t('help.translate_3')}</li>
+              <li>{t('help.translate_4')}</li>
+              <li>{t('help.translate_5')}</li>
+            </ol>
+          </section>
+
+          <div className="border-t border-subtle" />
+
           {/* Pro tips */}
           <section className="space-y-2">
             <p className="text-xs text-muted uppercase tracking-wider">{t('help.tips_title')}</p>

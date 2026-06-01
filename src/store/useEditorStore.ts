@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { EditorState, FrameId, ProjectMeta, Slide, SlideConfig, SlideFormat } from '../types'
+import type { EditorState, FrameId, ProjectMeta, Slide, SlideConfig, SlideFormat, TextVariant } from '../types'
 import {
   saveScreenshot,
   getScreenshot,
@@ -72,6 +72,9 @@ export const useEditorStore = create<EditorState>()(
       activeProjectId: _initProject.id,
       slides: [_initSlide],
       activeSlideId: _initSlide.id,
+      languages: [] as string[],
+      activeLanguage: 'en',
+      protectedWords: [] as string[],
 
       addSlide: () =>
         set((s) => {
@@ -128,8 +131,65 @@ export const useEditorStore = create<EditorState>()(
       applyToAllSlides: (patch) =>
         set((s) => ({ slides: s.slides.map((sl) => ({ ...sl, ...patch })) })),
 
+      setActiveLanguage: (lang) => set({ activeLanguage: lang }),
+
+      setProtectedWords: (words) => set({ protectedWords: words }),
+
+      addLanguage: (code, variants) =>
+        set((s) => ({
+          languages: s.languages.includes(code) ? s.languages : [...s.languages, code],
+          slides: s.slides.map((sl) => ({
+            ...sl,
+            textVariants: {
+              ...(sl.textVariants ?? {}),
+              [code]: variants[sl.id] ?? { headline: '', subtitle: '', status: 'empty' as const },
+            },
+          })),
+        })),
+
+      removeLanguage: (code) =>
+        set((s) => ({
+          languages: s.languages.filter((l) => l !== code),
+          activeLanguage: s.activeLanguage === code ? 'en' : s.activeLanguage,
+          slides: s.slides.map((sl) => {
+            const variants = { ...(sl.textVariants ?? {}) }
+            delete variants[code]
+            return { ...sl, textVariants: variants }
+          }),
+        })),
+
+      updateTextVariant: (slideId, lang, patch) =>
+        set((s) => ({
+          slides: s.slides.map((sl) =>
+            sl.id === slideId
+              ? {
+                  ...sl,
+                  textVariants: {
+                    ...(sl.textVariants ?? {}),
+                    [lang]: { ...(sl.textVariants?.[lang] ?? { headline: '', subtitle: '', status: 'empty' as const }), ...patch },
+                  },
+                }
+              : sl
+          ),
+        })),
+
+      markVariantsStale: (slideId, lang) =>
+        set((s) => ({
+          slides: s.slides.map((sl) =>
+            sl.id === slideId && sl.textVariants?.[lang]?.status === 'ok'
+              ? {
+                  ...sl,
+                  textVariants: {
+                    ...sl.textVariants,
+                    [lang]: { ...sl.textVariants[lang], status: 'stale' as TextVariant['status'] },
+                  },
+                }
+              : sl
+          ),
+        })),
+
       createProject: (name) => {
-        const { slides, activeProjectId, activeSlideId, projects } = get()
+        const { slides, activeProjectId, activeSlideId, projects, languages } = get()
         const newSlide = defaultSlide('phone')
         const newProject: ProjectMeta = {
           id: crypto.randomUUID(),
@@ -137,12 +197,13 @@ export const useEditorStore = create<EditorState>()(
           createdAt: Date.now(),
           slides: [toConfig(newSlide)],
           activeSlideId: newSlide.id,
+          languages: [],
         }
         set({
           projects: [
             ...projects.map((p) =>
               p.id === activeProjectId
-                ? { ...p, slides: slides.map(toConfig), activeSlideId }
+                ? { ...p, slides: slides.map(toConfig), activeSlideId, languages }
                 : p
             ),
             newProject,
@@ -150,6 +211,9 @@ export const useEditorStore = create<EditorState>()(
           activeProjectId: newProject.id,
           slides: [{ ...newSlide }],
           activeSlideId: newSlide.id,
+          languages: [],
+          activeLanguage: 'en',
+          protectedWords: [],
         })
       },
 
@@ -183,11 +247,11 @@ export const useEditorStore = create<EditorState>()(
       },
 
       switchProject: async (id) => {
-        const { slides, activeProjectId, activeSlideId, projects } = get()
+        const { slides, activeProjectId, activeSlideId, projects, languages, protectedWords } = get()
         if (id === activeProjectId) return
         const updatedProjects = projects.map((p) =>
           p.id === activeProjectId
-            ? { ...p, slides: slides.map(toConfig), activeSlideId }
+            ? { ...p, slides: slides.map(toConfig), activeSlideId, languages, protectedWords }
             : p
         )
         const target = projects.find((p) => p.id === id)
@@ -203,6 +267,9 @@ export const useEditorStore = create<EditorState>()(
           activeProjectId: id,
           slides: newSlides.length > 0 ? newSlides : [defaultSlide('phone')],
           activeSlideId: target.activeSlideId || newSlides[0]?.id || '',
+          languages: target.languages ?? [],
+          activeLanguage: 'en',
+          protectedWords: target.protectedWords ?? [],
         })
       },
     }),
@@ -212,11 +279,12 @@ export const useEditorStore = create<EditorState>()(
         _v: 2,
         projects: state.projects.map((p) =>
           p.id === state.activeProjectId
-            ? { ...p, slides: state.slides.map(toConfig), activeSlideId: state.activeSlideId }
+            ? { ...p, slides: state.slides.map(toConfig), activeSlideId: state.activeSlideId, languages: state.languages, protectedWords: state.protectedWords }
             : p
         ),
         activeProjectId: state.activeProjectId,
         activeSlideId: state.activeSlideId,
+        activeLanguage: state.activeLanguage,
       }),
       onRehydrateStorage: () => async (state) => {
         if (!state) return
@@ -260,6 +328,9 @@ export const useEditorStore = create<EditorState>()(
         useEditorStore.setState({
           slides,
           activeSlideId: state.activeSlideId || slides[0]?.id || '',
+          languages: active.languages ?? [],
+          activeLanguage: (state as unknown as Record<string, unknown>).activeLanguage as string ?? 'en',
+          protectedWords: active.protectedWords ?? [],
         })
       },
     }

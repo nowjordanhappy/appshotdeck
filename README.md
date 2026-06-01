@@ -32,7 +32,8 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Slide strip** — Up to 20 slides per project, drag to reorder, duplicate/remove, per-slide format badge
 - **Project save/load** — ZIP export (config.json + images/) and ZIP import per project
 - **Workspace save/load** — Save All / Load All exports every project into one workspace ZIP; conflict dialog on import (skip or replace existing)
-- **Export Slides** — Single PNG or all slides as a ZIP organized by format folder, named by project
+- **Slide translations** — Add languages to a project (auto-translated via MyMemory or filled manually); preview each language above the canvas; protected words keep brand names untranslated; export per language or all at once
+- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages at once
 - **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports
 - **Keyboard shortcuts** — `←/→` navigate slides, `Cmd+D` duplicate, `Delete` remove (with confirmation)
 - **Zoom callouts** — Drag a rectangle on the screenshot to create a magnified zoom bubble; drag the bubble anywhere on the canvas to reposition; up to 3 per slide; circle or rect shape; exports with the slide PNG
@@ -42,7 +43,7 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Confirmation dialogs** — Styled modals for slide and project deletion
 - **Persistent** — Slide configs in localStorage (Zustand persist), screenshots in IndexedDB
 - **Offline-first** — All fonts bundled via @fontsource, no CDN dependencies
-- **i18n** — English and Spanish
+- **i18n** — UI in English and Spanish; slide content translatable to 14 languages via MyMemory
 
 ## Tech Stack
 
@@ -54,6 +55,7 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 | Storage | localStorage (configs) + IndexedDB (screenshots) |
 | 3D rendering | Three.js + @react-three/fiber |
 | Export | html-to-image + JSZip |
+| Translation | MyMemory API (free, no key required) |
 | Fonts | @fontsource/inter, poppins, montserrat, nunito, space-grotesk |
 | Icons | lucide-react |
 | Build | Vite |
