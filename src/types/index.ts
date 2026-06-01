@@ -73,9 +73,10 @@ export interface Slide {
   textShadow: 'off' | 'dark' | 'light'
   callouts: Callout[]
   textVariants?: Record<string, TextVariant>
+  screenshotVariants?: Record<string, string | null>
 }
 
-export type SlideConfig = Omit<Slide, 'screenshotDataUrl'>
+export type SlideConfig = Omit<Slide, 'screenshotDataUrl' | 'screenshotVariants'>
 
 export interface ProjectMeta {
   id: string
@@ -112,4 +113,5 @@ export interface EditorState {
   languages: string[]
   protectedWords: string[]
   setProtectedWords: (words: string[]) => void
+  updateSlideVariantScreenshot: (slideId: string, lang: string, dataUrl: string | null) => Promise<void>
 }

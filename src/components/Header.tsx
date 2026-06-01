@@ -34,11 +34,14 @@ async function doImportWorkspace(
   }
 
   await Promise.all(
-    toImport.flatMap(({ meta, screenshots }) =>
-      screenshots.map(({ slideId, dataUrl }) =>
+    toImport.flatMap(({ meta, screenshots, variantScreenshots }) => [
+      ...screenshots.map(({ slideId, dataUrl }) =>
         saveScreenshot(`${meta.id}/${slideId}`, dataUrl)
-      )
-    )
+      ),
+      ...(variantScreenshots ?? []).map(({ slideId, lang, dataUrl }) =>
+        saveScreenshot(`${meta.id}/${slideId}/${lang}`, dataUrl)
+      ),
+    ])
   )
 
   const importedIds = new Set(toImport.map((lp) => lp.meta.id))
@@ -52,10 +55,19 @@ async function doImportWorkspace(
   if (replace && importedIds.has(activeProjectId)) {
     const replaced = toImport.find((lp) => lp.meta.id === activeProjectId)!
     const screenshotMap = new Map(replaced.screenshots.map((s) => [s.slideId, s.dataUrl]))
-    const newSlides = replaced.meta.slides.map((config) => ({
-      ...config,
-      screenshotDataUrl: screenshotMap.get(config.id) ?? null,
-    }))
+    const variantMap = new Map((replaced.variantScreenshots ?? []).map((v) => [`${v.slideId}/${v.lang}`, v.dataUrl]))
+    const newSlides = replaced.meta.slides.map((config) => {
+      const screenshotVariants: Record<string, string | null> = {}
+      replaced.meta.languages?.forEach((lang) => {
+        const variantDataUrl = variantMap.get(`${config.id}/${lang}`) ?? null
+        screenshotVariants[lang] = variantDataUrl
+      })
+      return {
+        ...config,
+        screenshotDataUrl: screenshotMap.get(config.id) ?? null,
+        ...(Object.keys(screenshotVariants).length ? { screenshotVariants } : {}),
+      }
+    })
     useEditorStore.setState({
       projects: updatedProjects,
       slides: newSlides,
@@ -212,11 +224,14 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
       const { activeProjectId } = useEditorStore.getState()
       await deleteProjectScreenshots(activeProjectId)
       await Promise.all(
-        loaded.map((sl) =>
+        loaded.flatMap((sl) => [
           sl.screenshotDataUrl
             ? saveScreenshot(`${activeProjectId}/${sl.id}`, sl.screenshotDataUrl)
-            : Promise.resolve()
-        )
+            : Promise.resolve(),
+          ...Object.entries(sl.screenshotVariants ?? {}).map(([lang, dataUrl]) =>
+            dataUrl ? saveScreenshot(`${activeProjectId}/${sl.id}/${lang}`, dataUrl) : Promise.resolve()
+          ),
+        ])
       )
       useEditorStore.setState({
         slides: loaded,

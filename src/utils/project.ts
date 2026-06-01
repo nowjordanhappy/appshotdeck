@@ -3,9 +3,17 @@ import type { Slide } from '../types'
 
 const PROJECT_VERSION = 1
 
+function extractBase64(dataUrl: string): string | null {
+  const parts = dataUrl.split(',')
+  return parts.length === 2 ? parts[1] : null
+}
+
 interface ProjectConfig {
   version: number
-  slides: Array<Omit<Slide, 'screenshotDataUrl'> & { image: string | null }>
+  slides: Array<Omit<Slide, 'screenshotDataUrl' | 'screenshotVariants'> & {
+    image: string | null
+    imageVariants?: Record<string, string>
+  }>
 }
 
 // ─── Save ────────────────────────────────────────────────────────────────────
@@ -18,18 +26,33 @@ export async function saveProject(slides: Slide[], projectName = 'appshotdeck-pr
     version: PROJECT_VERSION,
     slides: await Promise.all(
       slides.map(async (slide, idx) => {
-        const { screenshotDataUrl, ...rest } = slide
+        const { screenshotDataUrl, screenshotVariants, ...rest } = slide
         let image: string | null = null
+        const imageVariants: Record<string, string> = {}
 
         if (screenshotDataUrl) {
-          // Strip data URL prefix and store as actual file
-          const base64 = screenshotDataUrl.split(',')[1]
-          const filename = `slide-${idx + 1}.png`
-          images.file(filename, base64, { base64: true })
-          image = `images/${filename}`
+          const base64 = extractBase64(screenshotDataUrl)
+          if (base64) {
+            const filename = `slide-${idx + 1}.png`
+            images.file(filename, base64, { base64: true })
+            image = `images/${filename}`
+          }
         }
 
-        return { ...rest, image }
+        if (screenshotVariants) {
+          for (const [lang, dataUrl] of Object.entries(screenshotVariants)) {
+            if (dataUrl) {
+              const base64 = extractBase64(dataUrl)
+              if (base64) {
+                const filename = `slide-${idx + 1}-${lang}.png`
+                images.file(filename, base64, { base64: true })
+                imageVariants[lang] = `images/${filename}`
+              }
+            }
+          }
+        }
+
+        return { ...rest, image, ...(Object.keys(imageVariants).length ? { imageVariants } : {}) }
       })
     ),
   }
@@ -64,8 +87,9 @@ export async function loadProject(file: File): Promise<LoadedProject> {
   }
 
   const slides: Slide[] = await Promise.all(
-    config.slides.map(async ({ image, ...rest }) => {
+    config.slides.map(async ({ image, imageVariants, ...rest }) => {
       let screenshotDataUrl: string | null = null
+      const screenshotVariants: Record<string, string | null> = {}
 
       if (image) {
         const imgFile = zip.file(image)
@@ -75,7 +99,21 @@ export async function loadProject(file: File): Promise<LoadedProject> {
         }
       }
 
-      return { ...rest, screenshotDataUrl } as Slide
+      if (imageVariants) {
+        for (const [lang, path] of Object.entries(imageVariants)) {
+          const imgFile = zip.file(path)
+          if (imgFile) {
+            const base64 = await imgFile.async('base64')
+            screenshotVariants[lang] = `data:image/png;base64,${base64}`
+          }
+        }
+      }
+
+      return {
+        ...rest,
+        screenshotDataUrl,
+        ...(Object.keys(screenshotVariants).length ? { screenshotVariants } : {}),
+      } as Slide
     })
   )
 

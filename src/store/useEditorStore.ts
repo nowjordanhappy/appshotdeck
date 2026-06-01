@@ -7,6 +7,11 @@ import {
   deleteScreenshot,
   copyScreenshot,
   deleteProjectScreenshots,
+  saveScreenshotVariant,
+  deleteScreenshotVariant,
+  deleteSlideVariantScreenshots,
+  getSlideVariants,
+  copyScreenshotVariants,
 } from '../utils/db'
 
 export function defaultFrameForFormat(format: SlideFormat): FrameId {
@@ -47,7 +52,7 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   callouts: [],
 })
 
-function toConfig({ screenshotDataUrl: _, ...rest }: Slide): SlideConfig {
+function toConfig({ screenshotDataUrl: _, screenshotVariants: __, ...rest }: Slide): SlideConfig {
   return rest
 }
 
@@ -94,6 +99,9 @@ export const useEditorStore = create<EditorState>()(
           if (src.screenshotDataUrl) {
             copyScreenshot(`${s.activeProjectId}/${id}`, `${s.activeProjectId}/${copy.id}`)
           }
+          if (s.languages.length > 0) {
+            copyScreenshotVariants(s.activeProjectId, id, s.activeProjectId, copy.id, s.languages)
+          }
           return { slides, activeSlideId: copy.id }
         }),
 
@@ -101,6 +109,7 @@ export const useEditorStore = create<EditorState>()(
         set((s) => {
           if (s.slides.length === 1) return s
           deleteScreenshot(`${s.activeProjectId}/${id}`)
+          deleteSlideVariantScreenshots(s.activeProjectId, id)
           const slides = s.slides.filter((sl) => sl.id !== id)
           const activeSlideId = s.activeSlideId === id ? slides[0].id : s.activeSlideId
           return { slides, activeSlideId }
@@ -134,6 +143,22 @@ export const useEditorStore = create<EditorState>()(
       setActiveLanguage: (lang) => set({ activeLanguage: lang }),
 
       setProtectedWords: (words) => set({ protectedWords: words }),
+
+      updateSlideVariantScreenshot: async (slideId, lang, dataUrl) => {
+        const { activeProjectId } = get()
+        if (dataUrl) {
+          await saveScreenshotVariant(activeProjectId, slideId, lang, dataUrl)
+        } else {
+          await deleteScreenshotVariant(activeProjectId, slideId, lang)
+        }
+        set((s) => ({
+          slides: s.slides.map((sl) =>
+            sl.id === slideId
+              ? { ...sl, screenshotVariants: { ...(sl.screenshotVariants ?? {}), [lang]: dataUrl } }
+              : sl
+          ),
+        }))
+      },
 
       addLanguage: (code, variants) =>
         set((s) => ({
@@ -256,10 +281,12 @@ export const useEditorStore = create<EditorState>()(
         )
         const target = projects.find((p) => p.id === id)
         if (!target) return
+        const targetLangs = target.languages ?? []
         const newSlides = await Promise.all(
           target.slides.map(async (config) => ({
             ...config,
             screenshotDataUrl: await getScreenshot(`${id}/${config.id}`),
+            screenshotVariants: await getSlideVariants(id, config.id, targetLangs),
           }))
         )
         set({
@@ -267,7 +294,7 @@ export const useEditorStore = create<EditorState>()(
           activeProjectId: id,
           slides: newSlides.length > 0 ? newSlides : [defaultSlide('phone')],
           activeSlideId: target.activeSlideId || newSlides[0]?.id || '',
-          languages: target.languages ?? [],
+          languages: targetLangs,
           activeLanguage: 'en',
           protectedWords: target.protectedWords ?? [],
         })
@@ -319,17 +346,21 @@ export const useEditorStore = create<EditorState>()(
         const active = state.projects.find((p) => p.id === state.activeProjectId)
         if (!active?.slides.length) return
 
+        const activeLangs = active.languages ?? []
         const slides = await Promise.all(
           active.slides.map(async (config) => ({
             ...config,
             screenshotDataUrl: await getScreenshot(`${state.activeProjectId}/${config.id}`),
+            screenshotVariants: await getSlideVariants(state.activeProjectId, config.id, activeLangs),
           }))
         )
+        const storedLang = (state as unknown as Record<string, unknown>).activeLanguage as string ?? 'en'
+        const validatedLang = activeLangs.includes(storedLang) ? storedLang : 'en'
         useEditorStore.setState({
           slides,
           activeSlideId: state.activeSlideId || slides[0]?.id || '',
-          languages: active.languages ?? [],
-          activeLanguage: (state as unknown as Record<string, unknown>).activeLanguage as string ?? 'en',
+          languages: activeLangs,
+          activeLanguage: validatedLang,
           protectedWords: active.protectedWords ?? [],
         })
       },

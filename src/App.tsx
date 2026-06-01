@@ -33,12 +33,13 @@ function HiddenExportCanvases({
   const displaySlides = useMemo(() => {
     if (exportLanguage === 'en') return slides
     return slides.map((sl) => {
-      const variant = sl.textVariants?.[exportLanguage]
-      if (!variant) return sl
+      const textVariant = sl.textVariants?.[exportLanguage]
+      const screenshotVariant = sl.screenshotVariants?.[exportLanguage]
       return {
         ...sl,
-        headline: variant.headline || sl.headline,
-        subtitle: variant.subtitle || sl.subtitle,
+        headline: textVariant?.headline || sl.headline,
+        subtitle: textVariant?.subtitle || sl.subtitle,
+        screenshotDataUrl: screenshotVariant ?? sl.screenshotDataUrl,
       }
     })
   }, [slides, exportLanguage])
@@ -169,12 +170,13 @@ export default function App() {
 
   const displaySlide = useMemo(() => {
     if (!activeSlide || activeLanguage === 'en') return activeSlide
-    const variant = activeSlide.textVariants?.[activeLanguage]
-    if (!variant) return activeSlide
+    const textVariant = activeSlide.textVariants?.[activeLanguage]
+    const screenshotVariant = activeSlide.screenshotVariants?.[activeLanguage]
     return {
       ...activeSlide,
-      headline: variant.headline || activeSlide.headline,
-      subtitle: variant.subtitle || activeSlide.subtitle,
+      headline: textVariant?.headline || activeSlide.headline,
+      subtitle: textVariant?.subtitle || activeSlide.subtitle,
+      screenshotDataUrl: screenshotVariant ?? activeSlide.screenshotDataUrl,
     }
   }, [activeSlide, activeLanguage])
 

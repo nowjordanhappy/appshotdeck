@@ -19,6 +19,8 @@ function tx(db: IDBDatabase, mode: IDBTransactionMode) {
   return db.transaction(STORE_NAME, mode).objectStore(STORE_NAME)
 }
 
+// ─── Base helpers ─────────────────────────────────────────────────────────────
+
 export async function saveScreenshot(key: string, dataUrl: string): Promise<void> {
   const db = await getDb()
   return new Promise((resolve, reject) => {
@@ -68,4 +70,71 @@ export async function deleteProjectScreenshots(projectId: string): Promise<void>
     t.oncomplete = () => resolve()
     t.onerror = () => reject(t.error)
   })
+}
+
+// ─── Language variant helpers ─────────────────────────────────────────────────
+// Variant key format: `${projectId}/${slideId}/${lang}`
+// EN default key stays: `${projectId}/${slideId}` (unchanged)
+
+export function variantKey(projectId: string, slideId: string, lang: string): string {
+  return `${projectId}/${slideId}/${lang}`
+}
+
+export function saveScreenshotVariant(projectId: string, slideId: string, lang: string, dataUrl: string) {
+  return saveScreenshot(variantKey(projectId, slideId, lang), dataUrl)
+}
+
+export function getScreenshotVariant(projectId: string, slideId: string, lang: string) {
+  return getScreenshot(variantKey(projectId, slideId, lang))
+}
+
+export function deleteScreenshotVariant(projectId: string, slideId: string, lang: string) {
+  return deleteScreenshot(variantKey(projectId, slideId, lang))
+}
+
+export async function deleteSlideVariantScreenshots(projectId: string, slideId: string): Promise<void> {
+  const db = await getDb()
+  const prefix = `${projectId}/${slideId}/`
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(STORE_NAME, 'readwrite')
+    const store = t.objectStore(STORE_NAME)
+    const req = store.openCursor()
+    req.onsuccess = () => {
+      const cursor = req.result
+      if (!cursor) return
+      if (String(cursor.key).startsWith(prefix)) cursor.delete()
+      cursor.continue()
+    }
+    t.oncomplete = () => resolve()
+    t.onerror = () => reject(t.error)
+  })
+}
+
+export async function getSlideVariants(
+  projectId: string,
+  slideId: string,
+  langs: string[]
+): Promise<Record<string, string | null>> {
+  if (!langs.length) return {}
+  const entries = await Promise.all(
+    langs.map(async (lang) => [lang, await getScreenshotVariant(projectId, slideId, lang)] as const)
+  )
+  return Object.fromEntries(entries)
+}
+
+export async function copyScreenshotVariants(
+  fromProjectId: string,
+  fromSlideId: string,
+  toProjectId: string,
+  toSlideId: string,
+  langs: string[]
+): Promise<void> {
+  await Promise.all(
+    langs.map((lang) =>
+      copyScreenshot(
+        variantKey(fromProjectId, fromSlideId, lang),
+        variantKey(toProjectId, toSlideId, lang)
+      )
+    )
+  )
 }
