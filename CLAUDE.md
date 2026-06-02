@@ -164,10 +164,47 @@ Critical details for the 3D renderer:
 - **Export**: `exportLanguage` state in `App.tsx` controls what `HiddenExportCanvases` renders. Uses `flushSync` to force re-render before `html-to-image` captures. Export button becomes dropdown when `languages.length > 0`: per-language + "Export all languages".
 - **Email storage key**: `appshotdeck-translate-email` in localStorage.
 
+### Multi-language Screenshot Variants (`src/components/Canvas/ReplaceButton.tsx`, `src/utils/db.ts`)
+
+- **Storage**: Per-language custom screenshots stored in IndexedDB with composite keys `${projectId}/${slideId}/${language}`. Falls back to EN screenshot if language variant is unavailable.
+- **Replace button**: Persistent button below canvas (in `App.tsx`) lets users quickly replace the active language's screenshot. Updates EN screenshot directly if `activeLanguage === 'en'`, otherwise calls `updateSlideVariantScreenshot()` to save language variant.
+- **UI indicators**: 
+  - Language label below Replace/Export buttons shows which language variant is being replaced (e.g., "ES · Español · Spanish").
+  - Language dropdown shows asterisk (*) for languages with custom screenshots (e.g., "ES · Español * Spanish").
+  - Label always visible (never disappears on language switch) to prevent layout jumps.
+- **Export**: `HiddenExportCanvases` reads `screenshotVariants?.[exportLanguage]` and uses it if available, otherwise falls back to EN screenshot.
+
+## Save / Load checklist
+
+After every feature that adds new slide fields, project-level fields, or screenshot storage, verify:
+
+1. **Save Project** (`saveProject` in `src/utils/project.ts`) — new fields included in `ProjectConfig` and written to ZIP.
+2. **Load Project** (`loadProject` + `handleLoad` in `Header.tsx`) — new fields read back from ZIP and restored into store state AND `projects` list.
+3. **Save Workspace** (`saveWorkspace` in `src/utils/workspace.ts`) — new fields included in `WorkspaceProject` and written to ZIP.
+4. **Load Workspace** (`loadWorkspace` + `doImportWorkspace` in `Header.tsx`) — new fields read back and restored for all projects, including the active one.
+5. **Old ZIPs** — missing fields must fall back gracefully (`?? default`), never throw.
+
+Fields that must round-trip through both formats: `languages`, `protectedWords`, `textVariants` (per slide), `screenshotVariants` / `imageVariants` (per slide per lang), `activeSlideId`.
+
+### Compatibility rules
+
+Every schema change must be backward AND forward compatible:
+
+- **Old ZIP → new code (backward compat)**: new code must load ZIPs saved before the feature existed. Always use `?? default` when reading any field. Never assume a field is present. Test by loading a ZIP produced by the previous version.
+- **New ZIP → old code (forward compat)**: old code loading a newer ZIP should degrade gracefully — unknown fields are ignored, known fields still work. Achieve this by only adding fields, never renaming or removing them.
+- **Zustand localStorage (backward compat)**: persisted state from before the feature has no new fields. `onRehydrateStorage` and any component reading new store fields must use `?? default` fallbacks.
+- **Do not use a `version` check as the only guard** — fields can be missing from same-version ZIPs too (e.g. optional fields). Always guard every field individually.
+- **`PROJECT_VERSION`** in `project.ts` — bump when the `ProjectConfig` schema changes so old ZIPs can be detected.
+- **Zustand `partialize`** in `useEditorStore.ts` — new slide fields that are runtime-only (like `screenshotDataUrl`, `screenshotVariants`) must be stripped before localStorage persist; new fields that should survive refresh must be left in.
+- **`onRehydrateStorage`** in `useEditorStore.ts` — new top-level store fields need a default here for users upgrading from old localStorage data.
+- **`switchProject`** in `useEditorStore.ts` — new project-level fields must be saved to the outgoing project and restored from the incoming one.
+- **`duplicateSlide`** in `useEditorStore.ts` — new slide fields must be copied into the duplicate (and new screenshot variants must be copied in IndexedDB via `copyScreenshot`/`copyScreenshotVariants`).
+- **Export** (`HiddenExportCanvases` in `App.tsx`) — new per-language visual data must be applied when `exportLanguage` is set.
+
 ## Conventions
 
 - No comments unless the WHY is non-obvious.
 - Prefer editing existing files over creating new ones.
 - Tailwind CSS v3 (not v4) — `tailwind.config.ts` is present.
-- i18n via react-i18next — add new strings to both `src/locales/en/translation.json` and `src/locales/es/translation.json`.
+- **i18n is mandatory** — every user-visible string (button labels, placeholders, titles, tooltips, error messages, helper text) must use `t()` from `react-i18next`. Never hardcode text in JSX. Always add the key to **both** `src/locales/en/translation.json` and `src/locales/es/translation.json` at the same time. For JSX with embedded links/components use `<Trans i18nKey="..." components={{ ... }} />`. Components that don't already import `useTranslation` must add it.
 - Background presets: `GRADIENT_PRESETS` (dark), `LIGHT_GRADIENT_PRESETS` (light), `SOLID_PRESETS` in `src/data/backgrounds.ts`.

@@ -16,7 +16,9 @@ function VariantUploadSection({
   onUpload: (lang: string, dataUrl: string) => void
   onRemove: (lang: string) => void
 }) {
+  const { t } = useTranslation()
   const [compressing, setCompressing] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const meta = getLangMeta(lang)
   const label = meta?.native ?? lang.toUpperCase()
 
@@ -48,34 +50,49 @@ function VariantUploadSection({
         <p className="text-xs text-muted uppercase tracking-wider">
           <span className="font-mono">{lang.toUpperCase()}</span>
           {' · '}{label}
-          <span className="ml-1 text-dim normal-case font-normal">(optional)</span>
+          <span className="ml-1 text-dim normal-case font-normal">{t('upload.optional')}</span>
         </p>
         {variantDataUrl && (
           <button
             onClick={() => onRemove(lang)}
             className="flex items-center gap-1 text-xs text-muted hover:text-red-400 transition-colors"
-            title="Remove — reverts to EN screenshot"
+            title={t('upload.remove_variant_title')}
           >
             <X className="w-3 h-3" />
-            Remove
+            {t('upload.remove_variant')}
           </button>
         )}
       </div>
 
       {variantDataUrl ? (
-        <div className="relative rounded-xl overflow-hidden border border-indigo-400/30">
-          <img src={variantDataUrl} alt={`${label} screenshot`} className="w-full object-cover rounded-xl" />
-          <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity cursor-pointer rounded-xl">
-            <div className="flex flex-col items-center gap-2 text-white">
-              <Upload className="w-6 h-6" />
-              <span className="text-xs font-medium">Replace</span>
+        <label
+          onDrop={(e) => {
+            setIsDragOver(false)
+            onDrop(e)
+          }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragOver(true)
+          }}
+          onDragLeave={() => setIsDragOver(false)}
+          className={`relative rounded-lg overflow-hidden border h-24 w-full cursor-move block transition-all ${
+            isDragOver
+              ? 'border-indigo-400 bg-indigo-500/10'
+              : 'border-indigo-400/30 hover:border-indigo-400/50'
+          }`}
+        >
+          <img src={variantDataUrl} alt={`${label} screenshot`} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
+            <div className="flex flex-col items-center gap-1 text-white">
+              <Upload className="w-4 h-4" />
+              <span className="text-xs font-medium">{t('upload.drop_or_click')}</span>
             </div>
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handleFile(file)
-            }} />
-          </label>
-        </div>
+          </div>
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleFile(file)
+          }} />
+        </label>
       ) : (
         <label
           onDrop={onDrop}
@@ -85,14 +102,14 @@ function VariantUploadSection({
           {compressing ? (
             <>
               <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-              <p className="text-xs text-muted">Compressing…</p>
+              <p className="text-xs text-muted">{t('upload.compressing')}</p>
             </>
           ) : (
             <>
               <Upload className="w-4 h-4 text-muted" />
               <div>
-                <p className="text-xs text-muted font-medium">Upload {label} screenshot</p>
-                <p className="text-xs text-dim">Falls back to EN if empty</p>
+                <p className="text-xs text-muted font-medium">{t('upload.upload_lang', { lang: label })}</p>
+                <p className="text-xs text-dim">{t('upload.fallback_hint')}</p>
               </div>
             </>
           )}
@@ -149,7 +166,7 @@ export function UploadPanel() {
       {/* EN / default */}
       <div className="space-y-2">
         {hasLanguages && (
-          <p className="text-xs text-muted uppercase tracking-wider">Default (EN)</p>
+          <p className="text-xs text-muted uppercase tracking-wider">{t('upload.default_en')}</p>
         )}
         <label
           onDrop={onDropEN}

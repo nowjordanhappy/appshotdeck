@@ -39,7 +39,7 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
   const overlayRef    = useRef<HTMLDivElement>(null)
   const bubbleDragRef = useRef<BubbleDrag | null>(null)
 
-  const borderW = Math.max(2, Math.round(W * 0.004))
+  const borderW = Math.max(1, Math.round(W * 0.002))
   const cornerR = Math.round(W * 0.01)
 
   // ── Convert client coords → canvas pixels ─────────────────────────────────
@@ -186,12 +186,13 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
     const selW = Math.abs(curX - startX)
     const selH = Math.abs(curY - startY)
     if (selW > 4 && selH > 4) {
+      const isPhone = ['phone', 'iphone-69', 'iphone-65'].includes(slide.format)
       updateSlide(activeSlideId, {
         callouts: [...callouts, {
           id: crypto.randomUUID(),
           selX, selY, selW, selH,
           bubbleX: 50, bubbleY: 50,
-          bubbleSize: 90,
+          bubbleSize: isPhone ? 90 : 70,
           shape: 'rect',
           showLine: false,
         }],
@@ -298,7 +299,7 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
             {selectedId === c.id && (
               <div style={{
                 position: 'absolute', inset: 0,
-                boxShadow: `inset 0 0 0 ${borderW * 2}px rgba(99,102,241,0.9)`,
+                boxShadow: `inset 0 0 0 ${Math.max(1, Math.round(borderW * 1.5))}px rgba(99,102,241,0.9)`,
                 borderRadius: c.shape === 'circle' ? '50%' : cornerR * 2,
                 pointerEvents: 'none',
               }} />

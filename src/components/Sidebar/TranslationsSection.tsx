@@ -9,6 +9,7 @@ import { QuotaDialog } from '../QuotaDialog'
 import type { TextVariant } from '../../types'
 
 function ProtectedWordsInput({ words, onChange }: { words: string[]; onChange: (w: string[]) => void }) {
+  const { t } = useTranslation()
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -32,7 +33,7 @@ function ProtectedWordsInput({ words, onChange }: { words: string[]; onChange: (
   return (
     <div className="border-t border-subtle pt-3 space-y-2">
       <div className="flex items-center gap-2">
-        <p className="text-xs text-muted uppercase tracking-wider">Protected words</p>
+        <p className="text-xs text-muted uppercase tracking-wider">{t('translations.protected_words')}</p>
         {words.length > 0 && (
           <span className="text-xs bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-full font-medium">
             {words.length}
@@ -60,11 +61,11 @@ function ProtectedWordsInput({ words, onChange }: { words: string[]; onChange: (
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={commit}
-          placeholder={words.length === 0 ? 'Type and press Enter…' : ''}
+          placeholder={words.length === 0 ? t('translations.protected_placeholder') : ''}
           className="flex-1 min-w-[80px] bg-transparent text-sm text-gray-900 dark:text-white placeholder-black/30 dark:placeholder-white/30 outline-none"
         />
       </div>
-      <p className="text-xs text-dim">Won't be translated. Press Enter or comma to add.</p>
+      <p className="text-xs text-dim">{t('translations.protected_hint')}</p>
     </div>
   )
 }
@@ -208,7 +209,7 @@ export function TranslationsSection() {
             <button
               onClick={(e) => { e.stopPropagation(); if (staleLangs.length > 0) handleSyncAll() }}
               disabled={syncing || staleLangs.length === 0}
-              title={staleLangs.length === 0 ? 'All translations are up to date' : 'Re-translate all out-of-sync languages'}
+              title={staleLangs.length === 0 ? t('translations.sync_all_done') : t('translations.sync_all_stale')}
               className={`flex items-center gap-1 text-xs transition-colors px-1.5 py-0.5 rounded ${
                 staleLangs.length > 0
                   ? 'text-amber-400 hover:text-amber-300 cursor-pointer'
@@ -219,7 +220,7 @@ export function TranslationsSection() {
                 ? <Loader2 className="w-3 h-3 animate-spin" />
                 : <span className="leading-none">↻</span>
               }
-              <span>{syncing ? 'Syncing…' : 'Sync all'}</span>
+              <span>{syncing ? t('translations.syncing') : t('translations.sync_all')}</span>
             </button>
           )}
           <button

@@ -7,12 +7,14 @@ import { ConfirmDialog } from './components/ConfirmDialog'
 import { ToastContainer } from './components/ToastContainer'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
+import { ReplaceButton } from './components/Canvas/ReplaceButton'
 import { SlideStrip } from './components/SlideStrip'
 import { useEditorStore } from './store/useEditorStore'
 import { AddLanguageDialog } from './components/AddLanguageDialog'
 import { useThemeStore } from './store/useThemeStore'
 import { exportSlide } from './utils/export'
 import { getLangMeta } from './utils/translate'
+import { deleteScreenshotVariant } from './utils/db'
 import type { SlideFormat } from './types'
 
 function HiddenExportCanvases({
@@ -88,6 +90,7 @@ function LangDropdown({
   onSelect: (lang: string) => void
   onAdd: () => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -101,7 +104,7 @@ function LangDropdown({
   }, [open])
 
   const activeLabel = activeLanguage === 'en'
-    ? 'EN · Default'
+    ? t('lang.en_default')
     : (getLangMeta(activeLanguage)?.code.toUpperCase() ?? activeLanguage.toUpperCase())
 
   return (
@@ -123,7 +126,7 @@ function LangDropdown({
             >
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted">EN</span>
-                <span className="text-gray-900 dark:text-white">Default</span>
+                <span className="text-gray-900 dark:text-white">{t('lang.default_label')}</span>
               </div>
               {activeLanguage === 'en' && <Check className="w-3.5 h-3.5 text-indigo-400" />}
             </button>
@@ -135,9 +138,12 @@ function LangDropdown({
                   onClick={() => { onSelect(code); setOpen(false) }}
                   className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <span className="text-xs font-mono text-muted">{code.toUpperCase()}</span>
-                    <span className="text-gray-900 dark:text-white">{meta?.native ?? code}</span>
+                    <span className="text-xs text-gray-900 dark:text-white">
+                      {meta?.native ?? code}
+                      <span className="ml-1 text-muted">{meta?.label ?? code}</span>
+                    </span>
                   </div>
                   {activeLanguage === code && <Check className="w-3.5 h-3.5 text-indigo-400" />}
                 </button>
@@ -150,7 +156,7 @@ function LangDropdown({
       <button
         onClick={onAdd}
         className="w-6 h-6 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/8 text-muted hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
-        title="Add language"
+        title={t('lang.add')}
       >
         <Plus className="w-3.5 h-3.5" />
       </button>
@@ -163,7 +169,7 @@ export default function App() {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const [showAddLang, setShowAddLang] = useState(false)
   const [exportLanguage, setExportLanguage] = useState('en')
-  const { slides, activeSlideId, setActiveSlide, duplicateSlide, removeSlide, languages, activeLanguage, setActiveLanguage } = useEditorStore()
+  const { slides, activeSlideId, setActiveSlide, duplicateSlide, removeSlide, languages, activeLanguage, setActiveLanguage, activeProjectId, updateSlide } = useEditorStore()
   const { isDark } = useThemeStore()
   const { t } = useTranslation()
   const activeSlide = slides.find((s) => s.id === activeSlideId)
@@ -225,8 +231,23 @@ export default function App() {
     flushSync(() => setExportLanguage('en'))
   }, [activeSlide, activeSlideId, slides, activeLanguage])
 
-  const scale = activeSlide ? previewScale(activeSlide.format) : 1
-  const dims  = activeSlide ? FORMAT_DIMS[activeSlide.format] : { W: 1080, H: 1920 }
+  const mainRef = useRef<HTMLElement>(null)
+  const [containerW, setContainerW] = useState(0)
+
+  useEffect(() => {
+    const el = mainRef.current
+    if (!el) return
+    const obs = new ResizeObserver((entries) => {
+      setContainerW(entries[0].contentRect.width)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  const dims = activeSlide ? FORMAT_DIMS[activeSlide.format] : { W: 1080, H: 1920 }
+  const maxScale = activeSlide ? previewScale(activeSlide.format) : 1
+  const fitScale = containerW > 0 ? Math.min(maxScale, (containerW - 48) / dims.W) : maxScale
+  const scale = fitScale
   const displayW = Math.round(dims.W * scale)
   const displayH = Math.round(dims.H * scale)
 
@@ -237,7 +258,7 @@ export default function App() {
       <div className="flex flex-1 min-h-0">
         <Sidebar />
 
-        <main className="flex-1 flex flex-col items-center justify-center gap-4 overflow-auto p-6">
+        <main ref={mainRef} className="flex-1 flex flex-col items-center justify-center gap-4 overflow-y-auto overflow-x-hidden p-6">
           {activeSlide && displaySlide && (
             <>
               <LangDropdown
@@ -264,16 +285,36 @@ export default function App() {
               </div>
 
               <div className="flex flex-col items-center gap-1">
-                <button
-                  onClick={handleExportCurrent}
-                  className="flex items-center gap-2 px-4 py-2 text-sm btn-ghost"
-                >
-                  <Download className="w-4 h-4" />
-                  {t('export.slide')}
-                </button>
-                {activeLanguage !== 'en' && (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {activeSlide && <ReplaceButton slideId={activeSlide.id} />}
+                  {activeSlide && activeLanguage !== 'en' && activeSlide.screenshotVariants?.[activeLanguage] && (
+                    <button
+                      onClick={async () => {
+                        await deleteScreenshotVariant(activeProjectId, activeSlideId, activeLanguage)
+                        const variants = activeSlide.screenshotVariants || {}
+                        const updated = Object.fromEntries(
+                          Object.entries(variants).filter(([key]) => key !== activeLanguage)
+                        )
+                        updateSlide(activeSlideId, { screenshotVariants: updated })
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-sm btn-ghost text-muted hover:text-red-400"
+                    >
+                      {t('lang.use_default')}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleExportCurrent}
+                    className="flex items-center gap-2 px-4 py-2 text-sm btn-ghost"
+                  >
+                    <Download className="w-4 h-4" />
+                    {t('export.slide')}
+                  </button>
+                </div>
+                {activeSlide && (
                   <span className="text-xs text-muted">
-                    {getLangMeta(activeLanguage)?.native ?? activeLanguage.toUpperCase()}
+                    {activeLanguage === 'en'
+                      ? t('lang.en_default')
+                      : `${activeLanguage.toUpperCase()} · ${getLangMeta(activeLanguage)?.native ?? activeLanguage.toUpperCase()} · ${getLangMeta(activeLanguage)?.label ?? activeLanguage.toUpperCase()}`}
                   </span>
                 )}
               </div>

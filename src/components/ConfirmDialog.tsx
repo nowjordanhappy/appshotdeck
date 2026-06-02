@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface Props {
   message: string
   onConfirm: () => void
@@ -5,6 +7,7 @@ interface Props {
 }
 
 export function ConfirmDialog({ message, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
@@ -15,13 +18,13 @@ export function ConfirmDialog({ message, onConfirm, onCancel }: Props) {
             onClick={onCancel}
             className="px-4 py-2 text-sm rounded-lg border border-subtle text-muted hover:text-foreground transition-colors"
           >
-            Cancel
+            {t('confirm.cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 text-sm rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
           >
-            Remove
+            {t('confirm.remove')}
           </button>
         </div>
       </div>

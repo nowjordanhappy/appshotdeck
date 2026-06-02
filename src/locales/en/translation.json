@@ -13,7 +13,8 @@
     "export_lang": "Export {{lang}}",
     "export_all_langs": "Export all languages",
     "dark_mode": "Switch to dark mode",
-    "light_mode": "Switch to light mode"
+    "light_mode": "Switch to light mode",
+    "view_github": "View on GitHub"
   },
   "sidebar": {
     "format": "Format",
@@ -39,12 +40,48 @@
     "drop_title": "Drop screenshot here",
     "drop_subtitle": "or click to browse",
     "compressing": "Compressing…",
-    "hint": "PNG, JPG, WebP · auto-compressed to <900 KB"
+    "hint": "PNG, JPG, WebP · auto-compressed to <900 KB",
+    "optional": "(optional)",
+    "remove_variant": "Remove",
+    "remove_variant_title": "Remove — reverts to EN screenshot",
+    "drop_or_click": "Drop or click",
+    "upload_lang": "Upload {{lang}} screenshot",
+    "fallback_hint": "Falls back to EN if empty",
+    "default_en": "Default (EN)"
+  },
+  "replace": {
+    "replacing": "Replacing…",
+    "button": "Replace ({{lang}})"
+  },
+  "confirm": {
+    "cancel": "Cancel",
+    "remove": "Remove"
+  },
+  "quota": {
+    "title": "MyMemory daily limit reached",
+    "description": "AppShotDeck uses <link>MyMemory</link> for translations. Their free tier allows 500 words/day. Add your email to double it — no account needed.",
+    "email_placeholder": "you@example.com",
+    "privacy": "Stored locally. Only sent to MyMemory. 1,000 words/day free.",
+    "skip": "Skip",
+    "save_retry": "Save & retry"
+  },
+  "lang": {
+    "default_label": "Default",
+    "en_default": "EN · Default",
+    "add": "Add language",
+    "use_default": "Use default"
   },
   "frame": {
     "title": "Device Frame",
     "active": "Active",
-    "tilt": "Tilt"
+    "tilt": "Tilt",
+    "pos": "Pos",
+    "size": "Size",
+    "center_v": "Center vertically",
+    "center_h": "Center horizontally",
+    "reset_pos": "Reset to default position",
+    "reset_size": "Reset size",
+    "reset_tilt": "Reset tilt"
   },
   "background": {
     "gradients": "Gradients",
@@ -91,7 +128,10 @@
     "slide": "Export this slide PNG"
   },
   "projects": {
-    "new": "New Project"
+    "new": "New Project",
+    "new_name": "Project {{n}}",
+    "rename": "Rename",
+    "delete": "Delete"
   },
   "tips": {
     "pos": "Shifts the device on the canvas. 0 = centered. Use the center button to snap to center, or reset to the default layout position.",
@@ -126,7 +166,11 @@
     "callout_1": "Go to the Callout tab in the sidebar",
     "callout_2": "Drag a rectangle on the screenshot to define the area to zoom",
     "callout_3": "A zoom bubble appears — drag it anywhere on the canvas to reposition",
-    "callout_4": "Click a bubble to select it, then press Delete to remove it"
+    "callout_4": "Click a bubble to select it, then press Delete to remove it",
+    "screenshots_title": "Per-language Screenshots",
+    "screenshots_1": "After adding translations, use the Replace button below the canvas to upload language-specific screenshots",
+    "screenshots_2": "The language label below the buttons shows which variant you're replacing (e.g., ES · Español · Spanish)",
+    "screenshots_3": "Use 'Use default' to remove a custom screenshot and fall back to the EN default"
   },
   "callout": {
     "add": "Add callout",
@@ -166,7 +210,14 @@
     "subtitle_label": "Subtitle",
     "save": "Save",
     "cancel": "Cancel",
-    "scope_hint": "Applies to all {{count}} slide(s) in this project."
+    "scope_hint": "Applies to all {{count}} slide(s) in this project.",
+    "protected_words": "Protected words",
+    "protected_placeholder": "Type and press Enter…",
+    "protected_hint": "Won't be translated. Press Enter or comma to add.",
+    "sync_all_done": "All translations are up to date",
+    "sync_all_stale": "Re-translate all out-of-sync languages",
+    "syncing": "Syncing…",
+    "sync_all": "Sync all"
   },
   "workspace": {
     "import_title": "Import Workspace",

@@ -4,7 +4,6 @@ import type { Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
-import { ScreenOverlay } from './ScreenOverlay'
 import { CalloutLayer } from './CalloutLayer'
 
 interface Props {
@@ -189,7 +188,6 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
                     overflow: 'hidden',
                   }}>
                     <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={dSlotW} />
-                    {interactive && <ScreenOverlay slideId={slide.id} slotW={dSlotW} />}
                   </div>
                 </div>
               ) : (
@@ -200,7 +198,6 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
                   boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
                 }}>
                   <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={dSlotW} />
-                  {interactive && <ScreenOverlay slideId={slide.id} slotW={dSlotW} />}
                 </div>
               )}
             </div>

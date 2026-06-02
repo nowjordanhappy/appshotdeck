@@ -13,7 +13,8 @@
     "export_lang": "Exportar {{lang}}",
     "export_all_langs": "Exportar todos los idiomas",
     "dark_mode": "Cambiar a modo oscuro",
-    "light_mode": "Cambiar a modo claro"
+    "light_mode": "Cambiar a modo claro",
+    "view_github": "Ver en GitHub"
   },
   "sidebar": {
     "format": "Formato",
@@ -39,12 +40,48 @@
     "drop_title": "Arrastra tu captura aquí",
     "drop_subtitle": "o haz clic para buscar",
     "compressing": "Comprimiendo…",
-    "hint": "PNG, JPG, WebP · comprimido automáticamente a <900 KB"
+    "hint": "PNG, JPG, WebP · comprimido automáticamente a <900 KB",
+    "optional": "(opcional)",
+    "remove_variant": "Eliminar",
+    "remove_variant_title": "Eliminar — vuelve a la captura EN",
+    "drop_or_click": "Soltar o hacer clic",
+    "upload_lang": "Subir captura de {{lang}}",
+    "fallback_hint": "Usa la de EN si está vacío",
+    "default_en": "Predeterminado (EN)"
+  },
+  "replace": {
+    "replacing": "Reemplazando…",
+    "button": "Reemplazar ({{lang}})"
+  },
+  "confirm": {
+    "cancel": "Cancelar",
+    "remove": "Eliminar"
+  },
+  "quota": {
+    "title": "Límite diario de MyMemory alcanzado",
+    "description": "AppShotDeck usa <link>MyMemory</link> para traducciones. El nivel gratuito permite 500 palabras/día. Agrega tu correo para duplicarlo — no necesitas cuenta.",
+    "email_placeholder": "tu@correo.com",
+    "privacy": "Almacenado localmente. Solo enviado a MyMemory. 1,000 palabras/día gratis.",
+    "skip": "Omitir",
+    "save_retry": "Guardar y reintentar"
+  },
+  "lang": {
+    "default_label": "Predeterminado",
+    "en_default": "EN · Predeterminado",
+    "add": "Agregar idioma",
+    "use_default": "Usar predeterminado"
   },
   "frame": {
     "title": "Marco de dispositivo",
     "active": "Activo",
-    "tilt": "Inclinación"
+    "tilt": "Inclinación",
+    "pos": "Pos",
+    "size": "Tamaño",
+    "center_v": "Centrar verticalmente",
+    "center_h": "Centrar horizontalmente",
+    "reset_pos": "Restablecer posición predeterminada",
+    "reset_size": "Restablecer tamaño",
+    "reset_tilt": "Restablecer inclinación"
   },
   "background": {
     "gradients": "Degradados",
@@ -91,7 +128,10 @@
     "slide": "Exportar esta captura PNG"
   },
   "projects": {
-    "new": "Nuevo proyecto"
+    "new": "Nuevo proyecto",
+    "new_name": "Proyecto {{n}}",
+    "rename": "Renombrar",
+    "delete": "Eliminar"
   },
   "tips": {
     "pos": "Desplaza el dispositivo en el lienzo. 0 = centrado. Usa el botón de centrar para ajustarlo, o reinicia a la posición predeterminada.",
@@ -126,7 +166,11 @@
     "callout_1": "Ve a la pestaña Callout en la barra lateral",
     "callout_2": "Arrastra un rectángulo sobre la captura para definir el área a ampliar",
     "callout_3": "Aparece una burbuja de zoom — arrástrala a cualquier parte del lienzo",
-    "callout_4": "Haz clic en una burbuja para seleccionarla y presiona Eliminar para quitarla"
+    "callout_4": "Haz clic en una burbuja para seleccionarla y presiona Eliminar para quitarla",
+    "screenshots_title": "Capturas por idioma",
+    "screenshots_1": "Después de agregar traducciones, usa el botón Reemplazar bajo el lienzo para subir capturas específicas del idioma",
+    "screenshots_2": "La etiqueta de idioma bajo los botones muestra qué variante estás reemplazando (p.ej., ES · Español · Spanish)",
+    "screenshots_3": "Usa 'Usar predeterminado' para eliminar una captura personalizada y volver a la predeterminada EN"
   },
   "callout": {
     "add": "Agregar callout",
@@ -166,7 +210,14 @@
     "subtitle_label": "Subtítulo",
     "save": "Guardar",
     "cancel": "Cancelar",
-    "scope_hint": "Se aplica a las {{count}} diapositiva(s) de este proyecto."
+    "scope_hint": "Se aplica a las {{count}} diapositiva(s) de este proyecto.",
+    "protected_words": "Palabras protegidas",
+    "protected_placeholder": "Escribe y presiona Enter…",
+    "protected_hint": "No se traducirán. Presiona Enter o coma para agregar.",
+    "sync_all_done": "Todas las traducciones están al día",
+    "sync_all_stale": "Retraducir idiomas desincronizados",
+    "syncing": "Sincronizando…",
+    "sync_all": "Sincronizar todo"
   },
   "workspace": {
     "import_title": "Importar espacio de trabajo",

@@ -33,7 +33,8 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Project save/load** — ZIP export (config.json + images/) and ZIP import per project
 - **Workspace save/load** — Save All / Load All exports every project into one workspace ZIP; conflict dialog on import (skip or replace existing)
 - **Slide translations** — Add languages to a project (auto-translated via MyMemory or filled manually); preview each language above the canvas; protected words keep brand names untranslated; export per language or all at once
-- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages at once
+- **Per-language screenshots** — Upload custom screenshots for each language variant (e.g., English app screenshot vs Spanish app screenshot); Replace button below canvas makes it easy to swap screenshots for the active language without switching tabs; drag-and-drop or click on the thumbnail in the Upload tab to replace; "Use default" button reverts to the EN screenshot
+- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages at once; each language variant exports its own custom screenshot if available
 - **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports
 - **Keyboard shortcuts** — `←/→` navigate slides, `Cmd+D` duplicate, `Delete` remove (with confirmation)
 - **Zoom callouts** — Drag a rectangle on the screenshot to create a magnified zoom bubble; drag the bubble anywhere on the canvas to reposition; up to 3 per slide; circle or rect shape; exports with the slide PNG
@@ -43,7 +44,8 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Confirmation dialogs** — Styled modals for slide and project deletion
 - **Persistent** — Slide configs in localStorage (Zustand persist), screenshots in IndexedDB
 - **Offline-first** — All fonts bundled via @fontsource, no CDN dependencies
-- **i18n** — UI in English and Spanish; slide content translatable to 14 languages via MyMemory
+- **i18n** — UI fully in English and Spanish (all labels, tooltips, placeholders); slide content translatable to 14 languages via MyMemory
+- **Responsive preview** — Canvas scales to fit any window width automatically; header wraps to a second row on narrow viewports so all controls remain accessible
 
 ## Tech Stack
 
@@ -112,9 +114,13 @@ src/
 
 **3D export** — WebGL content is captured via `canvas.toDataURL()` before `html-to-image` runs, then composited onto the DOM PNG at the correct pixel position.
 
-**Screenshot storage** — Screenshots are kept in IndexedDB keyed by `${projectId}/${slideId}`. The Zustand store strips `screenshotDataUrl` before persisting to localStorage. On rehydration, screenshots are fetched from IndexedDB asynchronously. Loading a ZIP project saves screenshots to IndexedDB immediately.
+**Screenshot storage** — Screenshots are kept in IndexedDB keyed by `${projectId}/${slideId}` for EN (default) or `${projectId}/${slideId}/${language}` for language variants. The Zustand store strips `screenshotDataUrl` before persisting to localStorage. On rehydration, screenshots are fetched from IndexedDB asynchronously. Language variants fall back to the EN screenshot if not available. Loading a ZIP project saves all screenshots to IndexedDB immediately.
 
-**Project format** — Screenshots stored as real PNG files inside the ZIP (not base64 in JSON).
+**Save / load compatibility** — Project ZIPs (v2+) include `languages` and `protectedWords` alongside slide configs and screenshots. Old v1 ZIPs load correctly with empty defaults. All new fields use `?? default` guards so older ZIPs never break.
+
+**Per-language screenshots** — Each language can have its own custom screenshot (e.g., different app UI for different app store localizations). The Replace button below the canvas updates whichever language variant is currently active, making it fast to swap screenshots without visiting the upload panel.
+
+**Project format** — Screenshots stored as real PNG files inside the ZIP (not base64 in JSON). Language variant screenshots are included in export ZIPs alongside default screenshots.
 
 **Text shadow** — Shadow blur scales with canvas width (`W * 0.025`). Color is chosen based on background luminance: dark background → white glow, light background → dark shadow.
 

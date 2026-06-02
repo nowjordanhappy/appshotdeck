@@ -89,6 +89,18 @@ export function HelpPanel({ onClose }: Props) {
 
           <div className="border-t border-subtle" />
 
+          {/* Per-language screenshots */}
+          <section className="space-y-2">
+            <p className="text-xs text-muted uppercase tracking-wider">{t('help.screenshots_title')}</p>
+            <ol className="space-y-1.5 list-decimal list-inside text-dim leading-snug">
+              <li>{t('help.screenshots_1')}</li>
+              <li>{t('help.screenshots_2')}</li>
+              <li>{t('help.screenshots_3')}</li>
+            </ol>
+          </section>
+
+          <div className="border-t border-subtle" />
+
           {/* Pro tips */}
           <section className="space-y-2">
             <p className="text-xs text-muted uppercase tracking-wider">{t('help.tips_title')}</p>

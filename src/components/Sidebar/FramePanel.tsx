@@ -55,7 +55,7 @@ export function FramePanel() {
         <>
           <div className="flex items-center gap-2 pt-2 pr-1">
             <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
-              Pos <Tooltip text={t('tips.pos')} />
+              {t('frame.pos')} <Tooltip text={t('tips.pos')} />
             </span>
             <input
               type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
@@ -67,7 +67,7 @@ export function FramePanel() {
               <button
                 onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
                 className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-                title="Center vertically"
+                title={t('frame.center_v')}
               >
                 <AlignCenterVertical size={14} />
               </button>
@@ -76,7 +76,7 @@ export function FramePanel() {
               <button
                 onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
                 className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-                title="Center horizontally"
+                title={t('frame.center_h')}
               >
                 <AlignCenterHorizontal size={14} />
               </button>
@@ -84,14 +84,14 @@ export function FramePanel() {
             <button
               onClick={() => updateSlide(activeSlideId, { deviceOffset: DEFAULT_OFFSET[slide.format] ?? 0 })}
               className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-              title="Reset to default position"
+              title={t('frame.reset_pos')}
             >
               <RotateCcw size={14} />
             </button>
           </div>
           <div className="flex items-center gap-2 pr-1">
             <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
-              Size <Tooltip text={t('tips.size')} />
+              {t('frame.size')} <Tooltip text={t('tips.size')} />
             </span>
             <input
               type="range" min={60} max={LANDSCAPE_FORMATS.has(slide.format) || slide.format === 'ipad-13' ? 180 : 150} value={slide.deviceScale ?? 100}
@@ -102,7 +102,7 @@ export function FramePanel() {
             <button
               onClick={() => updateSlide(activeSlideId, { deviceScale: 100 })}
               className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-              title="Reset size"
+              title={t('frame.reset_size')}
             >
               <RotateCcw size={14} />
             </button>
@@ -124,7 +124,7 @@ export function FramePanel() {
           <button
             onClick={() => updateSlide(activeSlideId, { frameTilt: 0 })}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset tilt"
+            title={t('frame.reset_tilt')}
           >
             <RotateCcw size={14} />
           </button>

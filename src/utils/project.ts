@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import type { Slide } from '../types'
 
-const PROJECT_VERSION = 1
+const PROJECT_VERSION = 2
 
 function extractBase64(dataUrl: string): string | null {
   const parts = dataUrl.split(',')
@@ -10,6 +10,8 @@ function extractBase64(dataUrl: string): string | null {
 
 interface ProjectConfig {
   version: number
+  languages?: string[]
+  protectedWords?: string[]
   slides: Array<Omit<Slide, 'screenshotDataUrl' | 'screenshotVariants'> & {
     image: string | null
     imageVariants?: Record<string, string>
@@ -18,12 +20,19 @@ interface ProjectConfig {
 
 // ─── Save ────────────────────────────────────────────────────────────────────
 
-export async function saveProject(slides: Slide[], projectName = 'appshotdeck-project'): Promise<void> {
+export async function saveProject(
+  slides: Slide[],
+  projectName = 'appshotdeck-project',
+  languages: string[] = [],
+  protectedWords: string[] = [],
+): Promise<void> {
   const zip = new JSZip()
   const images = zip.folder('images')!
 
   const config: ProjectConfig = {
     version: PROJECT_VERSION,
+    languages,
+    protectedWords,
     slides: await Promise.all(
       slides.map(async (slide, idx) => {
         const { screenshotDataUrl, screenshotVariants, ...rest } = slide
@@ -73,6 +82,8 @@ export async function saveProject(slides: Slide[], projectName = 'appshotdeck-pr
 
 export interface LoadedProject {
   slides: Slide[]
+  languages: string[]
+  protectedWords: string[]
 }
 
 export async function loadProject(file: File): Promise<LoadedProject> {
@@ -117,5 +128,9 @@ export async function loadProject(file: File): Promise<LoadedProject> {
     })
   )
 
-  return { slides }
+  return {
+    slides,
+    languages: config.languages ?? [],
+    protectedWords: config.protectedWords ?? [],
+  }
 }
