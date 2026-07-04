@@ -245,7 +245,9 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
         <div style={{ position: 'absolute', inset: 0, zIndex: 51, cursor: 'grabbing' }} />
       )}
 
-      {/* Zoom bubbles */}
+      {/* Zoom bubbles — wrapped so the 3D export can re-composite them on top of the WebGL frame */}
+      {callouts.length > 0 && (
+      <div data-callout-layer style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       {callouts.map(c => {
         const bubD  = Math.round(c.bubbleSize / 100 * W)
         const bubCX = Math.round(c.bubbleX / 100 * W)
@@ -307,6 +309,8 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
           </div>
         )
       })}
+      </div>
+      )}
     </>
   )
 }

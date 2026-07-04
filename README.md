@@ -34,8 +34,8 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Workspace save/load** — Save All / Load All exports every project into one workspace ZIP; conflict dialog on import (skip or replace existing)
 - **Slide translations** — Add languages to a project (auto-translated via MyMemory or filled manually); preview each language above the canvas; protected words keep brand names untranslated; export per language or all at once
 - **Per-language screenshots** — Upload custom screenshots for each language variant (e.g., English app screenshot vs Spanish app screenshot); Replace button below canvas makes it easy to swap screenshots for the active language without switching tabs; drag-and-drop or click on the thumbnail in the Upload tab to replace; "Use default" button reverts to the EN screenshot
-- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages at once; each language variant exports its own custom screenshot if available
-- **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports
+- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages in a single ZIP with per-language folders (`en/…`, `es/…`); each language variant exports its own custom screenshot if available. Files are named per format and zero-padded (`slide-01`, `slide-02`, …) so store uploads stay in order
+- **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports; zoom callouts are re-composited on top so lenses stay above the 3D device
 - **Keyboard shortcuts** — `←/→` navigate slides, `Cmd+D` duplicate, `Delete` remove (with confirmation)
 - **Zoom callouts** — Drag a rectangle on the screenshot to create a magnified zoom bubble; drag the bubble anywhere on the canvas to reposition; up to 3 per slide; circle or rect shape; exports with the slide PNG
 - **Contextual tooltips** — `ⓘ` hints on non-obvious controls (Pos, Size, Tilt, Apply to all)

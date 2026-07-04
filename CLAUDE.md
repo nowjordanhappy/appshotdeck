@@ -45,7 +45,10 @@ Critical details for the 3D renderer:
 
 - For **flat frames**: `html-to-image` (`toPng`) captures the full-res DOM element directly.
 - For **3D frames**: WebGL content can't be captured by html-to-image. Fix: call `webglCanvas.toDataURL()` first (before html-to-image runs), then composite it on top of the DOM PNG using a `<canvas>` + `drawImage()`. Position is derived from `getBoundingClientRect()` divided by the CSS scale factor.
+- **Callouts + 3D frames**: the WebGL frame is drawn *over* the whole DOM capture, which would bury any zoom bubble overlapping the device. Fix: the bubbles are wrapped in a `[data-callout-layer]` div (`CalloutLayer.tsx`) and re-captured/re-drawn on top of the WebGL composite in `captureElement`. Flat frames don't hit this path (single DOM capture preserves stacking).
 - **Critical**: the hidden export container in `App.tsx` must NOT use `visibility: hidden` — it's an inherited CSS property and makes html-to-image capture blank PNGs. Use `left: -9999px` only.
+- **File naming / ordering** (`buildEntries` in `Header.tsx`): slides are numbered **per format**, zero-padded — `slide-01`, `slide-02`, … within each `<format-folder>`. The counter resets per format (`perFormatCount`), so a project mixing phone + tablet slides gets `phone/slide-01…` and `tablet-7/slide-01…` independently, not a global stride.
+- **`addEntriesToZip(zip, entries, prefix?)` / `downloadZip(zip, name)`**: reusable helpers. `exportAll` wraps them for single-language export. "Export all languages" (`handleExportAll` in `Header.tsx`) builds **one** ZIP with per-language folders — `en/android/phone/…`, `es/android/phone/…` — by looping languages, `flushSync`-ing `exportLanguage`, and calling `addEntriesToZip` with the lang as prefix. Single-language exports still produce their own ZIP.
 
 ### Project save/load (`src/utils/project.ts`)
 

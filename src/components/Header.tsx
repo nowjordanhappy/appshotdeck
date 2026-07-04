@@ -4,7 +4,8 @@ import { Download, Layers, Save, FolderOpen, Globe, Sun, Moon, ChevronDown, Plus
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
 import { useThemeStore } from '../store/useThemeStore'
-import { exportAll, type ExportEntry } from '../utils/export'
+import JSZip from 'jszip'
+import { exportAll, addEntriesToZip, downloadZip, type ExportEntry } from '../utils/export'
 import { saveProject, loadProject } from '../utils/project'
 import { saveWorkspace, loadWorkspace, type LoadedWorkspaceProject } from '../utils/workspace'
 import { saveScreenshot, deleteProjectScreenshots } from '../utils/db'
@@ -143,15 +144,17 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [saveOpen, loadOpen, exportOpen])
 
-  const buildEntries = useCallback(() =>
-    slides
-      .map((sl, idx) => {
+  const buildEntries = useCallback(() => {
+    const perFormatCount: Record<string, number> = {}
+    return slides
+      .map((sl) => {
         const el = canvasRefs.current.get(sl.id)
         if (!el) return null
-        return { el, format: sl.format, name: `slide-${idx + 1}` } satisfies ExportEntry
+        const n = (perFormatCount[sl.format] = (perFormatCount[sl.format] ?? 0) + 1)
+        return { el, format: sl.format, name: `slide-${String(n).padStart(2, '0')}` } satisfies ExportEntry
       })
       .filter(Boolean) as ExportEntry[]
-  , [slides, canvasRefs])
+  }, [slides, canvasRefs])
 
   const handleExportLanguage = useCallback(async (lang: string) => {
     if (exporting.current) return
@@ -168,11 +171,20 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
 
   const handleExportAll = useCallback(async () => {
     if (exporting.current) return
-    const langs = languages.length > 0 ? ['en', ...languages] : ['en']
-    for (const lang of langs) {
-      await handleExportLanguage(lang)
+    exporting.current = true
+    try {
+      const langs = languages.length > 0 ? ['en', ...languages] : ['en']
+      const zip = new JSZip()
+      for (const lang of langs) {
+        flushSync(() => setExportLanguage(lang))
+        await addEntriesToZip(zip, buildEntries(), langs.length > 1 ? lang : '')
+      }
+      await downloadZip(zip, langs.length > 1 ? `${projectName}-all-languages` : projectName)
+    } finally {
+      flushSync(() => setExportLanguage('en'))
+      exporting.current = false
     }
-  }, [languages, handleExportLanguage])
+  }, [languages, buildEntries, projectName, setExportLanguage])
 
   const handleSave = useCallback(async () => {
     await saveProject(slides, projectName, languages, protectedWords)

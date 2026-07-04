@@ -66,6 +66,15 @@ async function captureElement(el: HTMLElement, format: SlideFormat): Promise<str
   ctx.drawImage(domImg,   0, 0, width, height)
   ctx.drawImage(webglImg, webglX, webglY, webglW, webglH)
 
+  // The WebGL frame was just painted over any callout bubble overlapping the
+  // device. Re-draw the callout layer on top so zoom lenses sit above the 3D
+  // device (matches the live preview). Flat frames don't hit this path.
+  const calloutLayer = el.querySelector('[data-callout-layer]') as HTMLElement | null
+  if (calloutLayer && calloutLayer.childElementCount > 0) {
+    const calloutImg = await loadImage(await toPng(calloutLayer, { width, height, pixelRatio: 1 }))
+    ctx.drawImage(calloutImg, 0, 0, width, height)
+  }
+
   return composite.toDataURL('image/png')
 }
 
@@ -91,21 +100,26 @@ export interface ExportEntry {
   name: string
 }
 
-export async function exportAll(entries: ExportEntry[], projectName = 'appshotdeck'): Promise<void> {
-  const zip = new JSZip()
-  const folders: Record<string, JSZip> = {}
-
+// Capture each entry and add it to the zip under `[prefix/]<format-folder>/<name>.png`.
+export async function addEntriesToZip(zip: JSZip, entries: ExportEntry[], prefix = ''): Promise<void> {
   for (const { el, format, name } of entries) {
     const dataUrl = await captureElement(el, format)
     const base64 = dataUrl.split(',')[1]
-    const folderPath = FORMAT_FOLDER[format]
-    if (!folders[folderPath]) folders[folderPath] = zip.folder(folderPath)!
-    folders[folderPath].file(`${name}.png`, base64, { base64: true })
+    const folderPath = prefix ? `${prefix}/${FORMAT_FOLDER[format]}` : FORMAT_FOLDER[format]
+    zip.folder(folderPath)!.file(`${name}.png`, base64, { base64: true })
   }
+}
 
+export async function downloadZip(zip: JSZip, projectName: string): Promise<void> {
   const blob = await zip.generateAsync({ type: 'blob' })
   const url = URL.createObjectURL(blob)
   const safeName = projectName.replace(/[^a-z0-9_-]/gi, '-').toLowerCase()
   triggerDownload(url, `${safeName}-screenshots.zip`)
   setTimeout(() => URL.revokeObjectURL(url), 5000)
+}
+
+export async function exportAll(entries: ExportEntry[], projectName = 'appshotdeck'): Promise<void> {
+  const zip = new JSZip()
+  await addEntriesToZip(zip, entries)
+  await downloadZip(zip, projectName)
 }
