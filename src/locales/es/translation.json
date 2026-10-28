@@ -127,7 +127,8 @@
   },
   "strip": {
     "duplicate": "Duplicar",
-    "remove": "Eliminar"
+    "remove": "Eliminar",
+    "span_link": "El dispositivo cruza las diapositivas {{a}} y {{b}}"
   },
   "canvas": {
     "upload_prompt": "Sube una captura"

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Plus, X, Copy } from 'lucide-react'
+import { Plus, X, Copy, Link2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
+import { spanSource, spansNext } from '../utils/span'
 
 const FORMAT_BADGE: Record<string, string> = {
   'phone':     '📱',
@@ -46,6 +47,8 @@ export function SlideStrip() {
         const thumbH = isLandscape ? 46 : 74
         const isDragging = dragIdx === idx
         const isOver = overIdx === idx && dragIdx !== idx
+        // A receiving slide's own screenshot is hidden on the canvas, so hide it here too
+        const isReceiving = !!spanSource(slides, idx)
 
         return (
           <div
@@ -71,7 +74,7 @@ export function SlideStrip() {
               }`}
               style={{ width: thumbW, height: thumbH, ...bgStyle }}
             >
-              {slide.screenshotDataUrl && (
+              {slide.screenshotDataUrl && !isReceiving && (
                 <img src={slide.screenshotDataUrl} alt="" className="w-full h-full object-cover opacity-70" />
               )}
               <span className="absolute top-0.5 left-0.5 text-[8px] text-white/60 leading-none">
@@ -81,6 +84,15 @@ export function SlideStrip() {
                 {idx + 1}
               </span>
             </button>
+
+            {spansNext(slides, idx) && (
+              <span
+                title={t('strip.span_link', { a: idx + 1, b: idx + 2 })}
+                className="absolute top-1/2 -right-[14px] -translate-y-1/2 z-10 w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center pointer-events-auto"
+              >
+                <Link2 className="w-2.5 h-2.5 text-white" />
+              </span>
+            )}
 
             <div className="absolute -top-2 -right-2 hidden group-hover:flex gap-1">
               <button onClick={() => duplicateSlide(slide.id)} title={t('strip.duplicate')}

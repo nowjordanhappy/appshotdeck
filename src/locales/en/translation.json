@@ -127,7 +127,8 @@
   },
   "strip": {
     "duplicate": "Duplicate",
-    "remove": "Remove"
+    "remove": "Remove",
+    "span_link": "Device spans slides {{a}} and {{b}}"
   },
   "canvas": {
     "upload_prompt": "Upload Screenshot"
