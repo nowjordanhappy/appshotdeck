@@ -10,6 +10,10 @@ interface Props {
   slide: Slide
   scale?: number
   interactive?: boolean
+  /** Previous slide whose device continues into this one; this slide's own device is hidden. */
+  spanFrom?: Slide
+  /** This slide's device continues into the next slide. */
+  spanning?: boolean
 }
 
 interface FormatConfig {
@@ -39,14 +43,23 @@ function bgStyle(bg: Slide['background']): CSSProperties {
   return { background: `linear-gradient(${bg.angle}deg, ${bg.from}, ${bg.to})` }
 }
 
+// Shared background: both slides of a span draw the spanning slide's background at
+// double width, the left one showing its left half and the right one its right half.
+function spanBgStyle(bg: Slide['background'], half: 'left' | 'right'): CSSProperties {
+  return { ...bgStyle(bg), backgroundSize: '200% 100%', backgroundPosition: half === 'left' ? '0 0' : '100% 0' }
+}
+
 export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
-  ({ slide, scale = 1, interactive = true }, ref) => {
+  ({ slide, scale = 1, interactive = true, spanFrom, spanning = false }, ref) => {
     const fmt = FORMAT[slide.format]
     const { W, H, slotW, slotH, landscape, frameViewBox } = fmt
-    const frame = frameById(slide.frame)
+    // A receiving slide draws the spanning slide's device instead of its own
+    const device = spanFrom ?? slide
+    const isSpanned = spanning || !!spanFrom
+    const frame = frameById(device.frame)
 
     // Apply device scale (portrait only; tablets keep their fixed layout)
-    const deviceScaleFactor = (slide.deviceScale ?? 100) / 100
+    const deviceScaleFactor = (device.deviceScale ?? 100) / 100
     const dSlotW = Math.round(slotW * deviceScaleFactor)
     const dSlotH = Math.round(slotH * deviceScaleFactor)
 
@@ -67,9 +80,18 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const slotX_landscape = Math.round((W - dSlotW) / 2)
     const slotY_landscape = Math.round((H - dSlotH) / 2)
 
-    const offsetPx = Math.round((landscape ? W : H) * ((slide.deviceOffset ?? 0) / 100))
-    const slotX = (landscape ? slotX_landscape : slotX_portrait) + (landscape ? offsetPx : 0)
+    const offsetPx = Math.round((landscape ? W : H) * ((device.deviceOffset ?? 0) / 100))
+    // Spanning: spanX (100 = on the seam) replaces the horizontal position; the receiving
+    // slide draws the same device one canvas width to the left so the halves line up.
+    const slotX = isSpanned
+      ? Math.round(W * (device.spanX ?? 100) / 100 - dSlotW / 2) - (spanFrom ? W : 0)
+      : (landscape ? slotX_landscape : slotX_portrait) + (landscape ? offsetPx : 0)
     const slotY = (landscape ? slotY_landscape : slotY_portrait) + (landscape ? 0 : offsetPx)
+    const background = spanFrom?.spanBackground
+      ? spanBgStyle(spanFrom.background, 'right')
+      : spanning && slide.spanBackground
+        ? spanBgStyle(slide.background, 'left')
+        : bgStyle(slide.background)
 
     // Relative font sizing — scales with canvas width for all formats
     const headlineSize = Math.round(W * (landscape ? 0.036 : 0.063) * ((slide.headlineFontSize ?? 100) / 100))
@@ -96,7 +118,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           transformOrigin: 'top left',
           transform: scale !== 1 ? `scale(${scale})` : undefined,
           flexShrink: 0,
-          ...bgStyle(slide.background),
+          ...background,
         }}
       >
         {/* ── Text ──────────────────────────────────────────────────────── */}
@@ -164,8 +186,8 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               slotW={dSlotW}
               slotH={dSlotH}
               vbW={vbW}
-              tilt={slide.frameTilt}
-              screenshotDataUrl={slide.screenshotDataUrl}
+              tilt={device.frameTilt}
+              screenshotDataUrl={device.screenshotDataUrl}
             />
           ) : (
             <div
@@ -187,7 +209,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
                     borderRadius: Math.max(0, (screenshotRadius ?? 0) - (bezelWidth ?? 0)),
                     overflow: 'hidden',
                   }}>
-                    <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={dSlotW} />
+                    <ScreenContent screenshotDataUrl={device.screenshotDataUrl} slotW={dSlotW} />
                   </div>
                 </div>
               ) : (
@@ -197,20 +219,20 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
                   overflow: 'hidden',
                   boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
                 }}>
-                  <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={dSlotW} />
+                  <ScreenContent screenshotDataUrl={device.screenshotDataUrl} slotW={dSlotW} />
                 </div>
               )}
             </div>
           )}
         </div>
 
-        <CalloutLayer
+        {!spanFrom && <CalloutLayer
           slide={slide}
           slotX={slotX} slotY={slotY}
           slotW={dSlotW} slotH={dSlotH}
           W={W} H={H}
           interactive={interactive}
-        />
+        />}
       </div>
     )
   }

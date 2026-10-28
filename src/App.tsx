@@ -15,6 +15,7 @@ import { useThemeStore } from './store/useThemeStore'
 import { exportSlide } from './utils/export'
 import { getLangMeta } from './utils/translate'
 import { deleteScreenshotVariant } from './utils/db'
+import { spanSource, spansNext } from './utils/span'
 import type { Slide, SlideFormat } from './types'
 
 // Single source of truth for what a slide shows in a language — preview and export must agree
@@ -52,8 +53,15 @@ function HiddenExportCanvases({
 
   return (
     <div aria-hidden style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none' }}>
-      {displaySlides.map((slide) => (
-        <SlideCanvas key={slide.id} ref={setRef(slide.id)} slide={slide} interactive={false} />
+      {displaySlides.map((slide, i) => (
+        <SlideCanvas
+          key={slide.id}
+          ref={setRef(slide.id)}
+          slide={slide}
+          interactive={false}
+          spanFrom={spanSource(displaySlides, i)}
+          spanning={spansNext(displaySlides, i)}
+        />
       ))}
     </div>
   )
@@ -182,6 +190,11 @@ export default function App() {
     () => activeSlide && resolveSlideForLanguage(activeSlide, activeLanguage),
     [activeSlide, activeLanguage]
   )
+  const activeIndex = slides.findIndex((s) => s.id === activeSlideId)
+  const displaySpanFrom = useMemo(() => {
+    const src = spanSource(slides, activeIndex)
+    return src && resolveSlideForLanguage(src, activeLanguage)
+  }, [slides, activeIndex, activeLanguage])
 
   // Apply dark class to <html> whenever theme changes
   useEffect(() => {
@@ -278,7 +291,12 @@ export default function App() {
                   flexShrink: 0,
                 }}
               >
-                <SlideCanvas slide={displaySlide} scale={scale} />
+                <SlideCanvas
+                  slide={displaySlide}
+                  scale={scale}
+                  spanFrom={displaySpanFrom}
+                  spanning={spansNext(slides, activeIndex)}
+                />
               </div>
 
               <div className="flex flex-col items-center gap-1">
