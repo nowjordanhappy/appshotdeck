@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { Download, Plus, ChevronDown, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Header } from './components/Header'
-import { ConfirmDialog } from './components/ConfirmDialog'
+import { SlideDeleteDialog } from './components/SlideDeleteDialog'
 import { ToastContainer } from './components/ToastContainer'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
@@ -193,6 +193,8 @@ export default function App() {
   const activeIndex = slides.findIndex((s) => s.id === activeSlideId)
   // A spanning pair is previewed side by side so the seam can be lined up
   const previewSlides = useMemo(() => {
+    // activeSlideId can briefly point at no slide (e.g. while rehydrating)
+    if (activeIndex < 0) return []
     const left = spansNext(slides, activeIndex) ? activeIndex : spanSource(slides, activeIndex) ? activeIndex - 1 : -1
     const indices = left >= 0 ? [left, left + 1] : [activeIndex]
     return indices.map((i) => {
@@ -366,11 +368,7 @@ export default function App() {
       <HiddenExportCanvases canvasRefs={canvasRefs} exportLanguage={exportLanguage} />
 
       {pendingDelete && (
-        <ConfirmDialog
-          message="Remove this slide? This can't be undone."
-          onConfirm={() => { removeSlide(pendingDelete); setPendingDelete(null) }}
-          onCancel={() => setPendingDelete(null)}
-        />
+        <SlideDeleteDialog slideId={pendingDelete} onClose={() => setPendingDelete(null)} />
       )}
 
       {showAddLang && <AddLanguageDialog onClose={() => setShowAddLang(false)} />}

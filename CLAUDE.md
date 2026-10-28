@@ -130,14 +130,16 @@ Critical details for the 3D renderer:
 
 - One device drawn across the seam of two adjacent slides (panoramic store screenshots). No double-width canvas: the **same device is rendered in both slides**, shifted by one canvas width on the second, and each canvas's `overflow: hidden` crops its half. Export is unchanged.
 - **Fields live on the left slide (A) only**: `spanNext`, `spanX` (device center as % of W; 100 = on the seam), `spanBackground`, `deviceRotate`. All optional — read with `?? default`. The receiving slide (B) has no span field.
-- **Pairing is by adjacency**: `spanSource(slides, i)` returns the previous slide if it has `spanNext`, the same format, and is not itself a receiver (no chains). `spansNext(slides, i)` is the inverse. Reorder/delete just re-evaluate — never store the pairing.
-- `SlideCanvas` props `spanFrom` (B gets A) and `spanning` (A). B draws **A's** device (frame, scale, offset, tilt, screenshot) at `slotX - W` and hides its own device, callouts and the Replace button; its own screenshot is kept, not deleted.
+- **Pairing is by adjacency**: `spanSource(slides, i)` returns the previous slide if it has `spanNext`, the same format, and is not itself a receiver (no chains). `spansNext(slides, i)` is the inverse. The pairing itself is never stored, but `addSlide`, `removeSlide` and `reorderSlides` pass through `keepSpanPartners(before, after)`: a span survives only if A still continues into the **same** slide, otherwise `spanNext` is cleared — a span never silently jumps to (or later revives on) whichever slide lands next. Cancelling the span dialog also clears a stale flag. `reorderSlides` moves a pair as one block (dragging either slide) and never drops anything between another pair's two slides — it lands just past that pair.
+- `SlideCanvas` props `spanFrom` (B gets A) and `spanning` (A). B draws **A's** device (frame, scale, offset, tilt, screenshot) at `slotX - W` and hides its own device, callouts and the Replace button; its own screenshot is kept, not deleted. On landscape formats B's text column is mirrored to the right (the device enters from the left).
 - `spanBackground`: both slides draw A's background at `background-size: 200% 100%`, A at position `0 0`, B at `100% 0`.
 - Callers must pass both the slide and its `spanFrom` through `resolveSlideForLanguage` (`App.tsx`) so B shows A's screenshot variant for the same language — preview and `HiddenExportCanvases` share that helper.
 - A span adds **no** WebGL context: B renders A's device *instead of* its own.
-- `duplicateSlide` clears `spanNext` on the copy (the copy lands right after the original and would otherwise chain).
+- Turning span on with no valid next slide never refuses: `FramePanel` confirms, then `insertSpanSlide(id)` inserts a same-format slide (copying A's background) right after A and sets `spanNext`. A different-format next slide just moves one place right. Turning span on always asks: with a same-format next slide the dialog offers **Use slide N** (its device is hidden, kept — the message warns when it has a screenshot or callouts) or **Add slide**.
+- `duplicateSlide` clears `spanNext` on the copy and, for a spanning slide, inserts the copy after its partner (between them it would become the receiver).
 - `deviceRotate` (in-plane, ±40°, works with or without a span): flat frames = CSS `rotate()` on the slot div (html-to-image renders it). 3D frames = an **outer** `<group rotation-z>` around `PhoneModel` (inside its tilt Euler it would roll around the tilted axis); the WebGL canvas grows to the rotated slot's bounding box, centered on the slot, and the FOV widens by the same height ratio at the same camera distance, so the device keeps its pixel size and perspective. `SizeEnforcer` also syncs `fov` (the Canvas `camera` prop is mount-only). `rotate = 0` takes the original path — existing 3D exports stay byte-identical. **Never CSS-rotate the WebGL canvas**: the export composite places it by `getBoundingClientRect()`, which would return the rotated bounding box. `CalloutLayer` gets the same `rotate` and un-rotates the mouse point around the slot center before its slot-% hit-test, and draws the drag preview inside a box rotated like the device, so callouts can be created on a rotated device.
 - `SlideStrip`: an indigo link badge sits between paired thumbnails; a receiving slide's thumbnail hides its own (hidden) screenshot.
+- Deleting a slide of a pair (strip × or Delete key) goes through `SlideDeleteDialog`: **Remove slide N** (the partner becomes a normal slide) or **Remove both** (hidden when only the pair is left). Single slides keep the old behaviour (strip × deletes at once, Delete key confirms).
 - Main preview renders the pair side by side (`previewSlides` in `App.tsx`) whenever the active slide spans or receives; clicking the partner selects it.
 
 ### HelpPanel (`src/components/HelpPanel.tsx`)
@@ -156,7 +158,7 @@ Critical details for the 3D renderer:
 ### ConfirmDialog (`src/components/ConfirmDialog.tsx`)
 
 - Reusable modal with backdrop click to cancel, Cancel and red Remove buttons.
-- Used for slide deletion (keyboard) and project deletion (header dropdown).
+- Used for slide deletion (keyboard) and project deletion (header dropdown). Optional `confirmLabel` + `tone: 'primary'` (indigo) for non-destructive confirms (span slide insert).
 
 ## Format configs (SlideCanvas.tsx)
 

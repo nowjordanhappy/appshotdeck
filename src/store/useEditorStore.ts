@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { keepSpanPartners, spanSource, spansNext } from '../utils/span'
 import { persist } from 'zustand/middleware'
 import type { EditorState, FrameId, ProjectMeta, Slide, SlideConfig, SlideFormat, TextVariant } from '../types'
 import {
@@ -85,18 +86,30 @@ export const useEditorStore = create<EditorState>()(
         set((s) => {
           const active = s.slides.find((sl) => sl.id === s.activeSlideId)
           const slide = defaultSlide(active?.format ?? 'phone')
-          return { slides: [...s.slides, slide], activeSlideId: slide.id }
+          return { slides: keepSpanPartners(s.slides, [...s.slides, slide]), activeSlideId: slide.id }
+        }),
+
+      insertSpanSlide: (id) =>
+        set((s) => {
+          const idx = s.slides.findIndex((sl) => sl.id === id)
+          if (idx < 0) return s
+          const src = s.slides[idx]
+          const partner = { ...defaultSlide(src.format), background: src.background }
+          const slides = s.slides.map((sl) => (sl.id === id ? { ...sl, spanNext: true } : sl))
+          slides.splice(idx + 1, 0, partner)
+          return { slides }
         }),
 
       duplicateSlide: (id) =>
         set((s) => {
           const src = s.slides.find((sl) => sl.id === id)
           if (!src) return s
-          // A copy inserted right after a spanning slide must not span into the original's partner
+          // The copy never spans, and goes after a spanning slide's partner — inserted between
+          // them it would become the receiver and break the original pair
           const copy = { ...src, id: crypto.randomUUID(), spanNext: false }
           const idx = s.slides.findIndex((sl) => sl.id === id)
           const slides = [...s.slides]
-          slides.splice(idx + 1, 0, copy)
+          slides.splice(spansNext(s.slides, idx) ? idx + 2 : idx + 1, 0, copy)
           if (src.screenshotDataUrl) {
             copyScreenshot(`${s.activeProjectId}/${id}`, `${s.activeProjectId}/${copy.id}`)
           }
@@ -111,7 +124,7 @@ export const useEditorStore = create<EditorState>()(
           if (s.slides.length === 1) return s
           deleteScreenshot(`${s.activeProjectId}/${id}`)
           deleteSlideVariantScreenshots(s.activeProjectId, id)
-          const slides = s.slides.filter((sl) => sl.id !== id)
+          const slides = keepSpanPartners(s.slides, s.slides.filter((sl) => sl.id !== id))
           const activeSlideId = s.activeSlideId === id ? slides[0].id : s.activeSlideId
           return { slides, activeSlideId }
         }),
@@ -132,10 +145,18 @@ export const useEditorStore = create<EditorState>()(
 
       reorderSlides: (from, to) =>
         set((s) => {
-          const slides = [...s.slides]
-          const [moved] = slides.splice(from, 1)
-          slides.splice(to, 0, moved)
-          return { slides }
+          // A spanning pair moves as one block, whichever of its two slides is dragged
+          const start = spansNext(s.slides, from) ? from : spanSource(s.slides, from) ? from - 1 : from
+          const len = start === from && !spansNext(s.slides, from) ? 1 : 2
+          if (to >= start && to < start + len) return s
+          const block = s.slides.slice(start, start + len)
+          const slides = [...s.slides.slice(0, start), ...s.slides.slice(start + len)]
+          const movingRight = to > start
+          let pos = movingRight ? to - len + 1 : to
+          // Never drop between the two slides of another pair — land just past it
+          if (pos > 0 && pos < slides.length && spansNext(slides, pos - 1)) pos += movingRight ? 1 : -1
+          slides.splice(pos, 0, ...block)
+          return { slides: keepSpanPartners(s.slides, slides) }
         }),
 
       applyToAllSlides: (patch) =>

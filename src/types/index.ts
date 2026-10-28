@@ -102,6 +102,8 @@ export interface EditorState {
   slides: Slide[]
   activeSlideId: string
   addSlide: () => void
+  /** Inserts a same-format slide right after `id` and makes `id` span into it. */
+  insertSpanSlide: (id: string) => void
   duplicateSlide: (id: string) => void
   removeSlide: (id: string) => void
   setActiveSlide: (id: string) => void

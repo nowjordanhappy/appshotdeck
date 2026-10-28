@@ -3,6 +3,7 @@ import { Plus, X, Copy, Link2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
 import { spanSource, spansNext } from '../utils/span'
+import { SlideDeleteDialog } from './SlideDeleteDialog'
 
 const FORMAT_BADGE: Record<string, string> = {
   'phone':     '📱',
@@ -19,6 +20,7 @@ export function SlideStrip() {
     useEditorStore()
   const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [overIdx, setOverIdx] = useState<number | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
 
   return (
     <div
@@ -45,7 +47,10 @@ export function SlideStrip() {
         const isIpad = slide.format === 'ipad-13'
         const thumbW = isLandscape ? 80 : isIpad ? 56 : 46
         const thumbH = isLandscape ? 46 : 74
-        const isDragging = dragIdx === idx
+        // A pair is dragged as one block, so its partner fades with it
+        const isDragging = dragIdx !== null && (dragIdx === idx ||
+          (spansNext(slides, dragIdx) && idx === dragIdx + 1) ||
+          (!!spanSource(slides, dragIdx) && idx === dragIdx - 1))
         const isOver = overIdx === idx && dragIdx !== idx
         // A receiving slide's own screenshot is hidden on the canvas, so hide it here too
         const isReceiving = !!spanSource(slides, idx)
@@ -100,7 +105,13 @@ export function SlideStrip() {
                 <Copy className="w-3 h-3 text-white" />
               </button>
               {slides.length > 1 && (
-                <button onClick={() => removeSlide(slide.id)} title={t('strip.remove')}
+                <button
+                  onClick={() => {
+                    // Single slides still delete immediately; a span pair asks what to remove
+                    if (spansNext(slides, idx) || spanSource(slides, idx)) setPendingDelete(slide.id)
+                    else removeSlide(slide.id)
+                  }}
+                  title={t('strip.remove')}
                   className="w-5 h-5 rounded-full bg-black/20 dark:bg-white/20 hover:bg-red-500 flex items-center justify-center transition-colors">
                   <X className="w-3 h-3 text-white" />
                 </button>
@@ -130,6 +141,8 @@ export function SlideStrip() {
         >
           <Plus className="w-5 h-5 text-muted" />
         </button>
+
+      {pendingDelete && <SlideDeleteDialog slideId={pendingDelete} onClose={() => setPendingDelete(null)} />}
     </div>
   )
 }

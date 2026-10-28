@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical, Link2 } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
 import { Tooltip } from '../Tooltip'
 import { spanSource } from '../../utils/span'
+import { ConfirmDialog } from '../ConfirmDialog'
 
 const RESIZABLE_FORMATS = new Set(['phone', 'iphone-69', 'iphone-65', 'ipad-13', 'tablet-7', 'tablet-10'])
 const LANDSCAPE_FORMATS = new Set(['tablet-7', 'tablet-10'])
@@ -17,7 +19,8 @@ const DEFAULT_OFFSET: Record<string, number> = {
 
 export function FramePanel() {
   const { t } = useTranslation()
-  const { slides, activeSlideId, updateSlide, setActiveSlide } = useEditorStore()
+  const { slides, activeSlideId, updateSlide, setActiveSlide, insertSpanSlide } = useEditorStore()
+  const [confirmInsert, setConfirmInsert] = useState(false)
   const index = slides.findIndex((s) => s.id === activeSlideId)
   const slide = slides[index]
   if (!slide) return null
@@ -27,6 +30,9 @@ export function FramePanel() {
   const receivingFrom = spanSource(slides, index)
   const next = slides[index + 1]
   const canSpan = !!next && next.format === slide.format
+  // Spanning hides the next slide's own device, so ask before hiding real content
+  const spanning = canSpan && (slide.spanNext ?? false)
+  const nextHasDevice = canSpan && (!!next.screenshotDataUrl || (next.callouts?.length ?? 0) > 0)
 
   // The device on a receiving slide belongs to the previous slide; edit it there
   if (receivingFrom) {
@@ -87,7 +93,7 @@ export function FramePanel() {
               className="flex-1 min-w-0"
             />
             <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{(slide.deviceOffset ?? 0) > 0 ? `+${slide.deviceOffset}` : (slide.deviceOffset ?? 0)}%</span>
-            {PORTRAIT_PHONE_FORMATS.has(slide.format) && (
+            {(PORTRAIT_PHONE_FORMATS.has(slide.format) || spanning) && (
               <button
                 onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
                 className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
@@ -96,7 +102,7 @@ export function FramePanel() {
                 <AlignCenterVertical size={14} />
               </button>
             )}
-            {LANDSCAPE_FORMATS.has(slide.format) && (
+            {LANDSCAPE_FORMATS.has(slide.format) && !spanning && (
               <button
                 onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
                 className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
@@ -175,16 +181,40 @@ export function FramePanel() {
       )}
 
       <div className="pt-3 mt-2 border-t border-gray-200 dark:border-white/10 space-y-2">
-        <label className={`flex items-center gap-2 text-sm ${canSpan ? 'cursor-pointer' : 'opacity-50'}`}>
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
           <input
             type="checkbox"
-            disabled={!canSpan}
             checked={canSpan && (slide.spanNext ?? false)}
-            onChange={(e) => updateSlide(activeSlideId, { spanNext: e.target.checked })}
+            onChange={(e) => {
+              // No same-format slide to continue into → offer to insert one instead of refusing
+              // Always ask: even an empty next slide may have its own text and background
+              if (e.target.checked) setConfirmInsert(true)
+              else updateSlide(activeSlideId, { spanNext: e.target.checked })
+            }}
           />
           {t('frame.span_next')}
-          <Tooltip text={canSpan ? t('tips.span') : t('tips.span_unavailable')} />
+          <Tooltip text={t('tips.span')} side="top-end" />
         </label>
+        {confirmInsert && (
+          <ConfirmDialog
+            message={
+              nextHasDevice ? t('frame.span_use_or_insert', { n: index + 2 })
+                : canSpan ? t('frame.span_use_or_insert_empty', { n: index + 2 })
+                : next ? t('frame.span_insert_mismatch', { n: index + 2 })
+                : t('frame.span_insert_new')
+            }
+            confirmLabel={t('frame.span_insert_confirm')}
+            tone="primary"
+            secondaryLabel={canSpan ? t('frame.span_use_next', { n: index + 2 }) : undefined}
+            onSecondary={() => { updateSlide(activeSlideId, { spanNext: true }); setConfirmInsert(false) }}
+            onConfirm={() => { insertSpanSlide(activeSlideId); setConfirmInsert(false) }}
+            onCancel={() => {
+              // The checkbox showed unchecked; don't leave a hidden flag that revives later
+              if (slide.spanNext) updateSlide(activeSlideId, { spanNext: false })
+              setConfirmInsert(false)
+            }}
+          />
+        )}
         {canSpan && slide.spanNext && (
           <>
             <div className="flex items-center gap-2 pr-1">
@@ -205,14 +235,14 @@ export function FramePanel() {
                 <RotateCcw size={14} />
               </button>
             </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={slide.spanBackground ?? false}
                 onChange={(e) => updateSlide(activeSlideId, { spanBackground: e.target.checked })}
               />
               {t('frame.span_bg')}
-              <Tooltip text={t('tips.span_bg')} />
+              <Tooltip text={t('tips.span_bg')} side="top-end" />
             </label>
           </>
         )}

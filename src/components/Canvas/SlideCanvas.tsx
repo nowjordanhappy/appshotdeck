@@ -81,13 +81,15 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const slotX_landscape = Math.round((W - dSlotW) / 2)
     const slotY_landscape = Math.round((H - dSlotH) / 2)
 
-    const offsetPx = Math.round((landscape ? W : H) * ((device.deviceOffset ?? 0) / 100))
+    // Pos is horizontal on tablets — except while spanning, where spanX owns X and Pos moves Y
+    const offsetVertical = !landscape || isSpanned
+    const offsetPx = Math.round((offsetVertical ? H : W) * ((device.deviceOffset ?? 0) / 100))
     // Spanning: spanX (100 = on the seam) replaces the horizontal position; the receiving
     // slide draws the same device one canvas width to the left so the halves line up.
     const slotX = isSpanned
       ? Math.round(W * (device.spanX ?? 100) / 100 - dSlotW / 2) - (spanFrom ? W : 0)
       : (landscape ? slotX_landscape : slotX_portrait) + (landscape ? offsetPx : 0)
-    const slotY = (landscape ? slotY_landscape : slotY_portrait) + (landscape ? 0 : offsetPx)
+    const slotY = (landscape ? slotY_landscape : slotY_portrait) + (offsetVertical ? offsetPx : 0)
     const background = spanFrom?.spanBackground
       ? spanBgStyle(spanFrom.background, 'right')
       : spanning && slide.spanBackground
@@ -124,11 +126,12 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
       >
         {/* ── Text ──────────────────────────────────────────────────────── */}
         {landscape ? (
-          // Tablet: left column, vertically centered
+          // Tablet: left column, vertically centered. A receiving slide mirrors it to the right,
+          // since the device continuing from the previous slide enters from the left.
           <div
             style={{
               position: 'absolute',
-              left: Math.round(W * 0.05),
+              left: spanFrom ? W - Math.round(W * 0.05) - Math.round(W * 0.23) : Math.round(W * 0.05),
               top: 0,
               width: Math.round(W * 0.23),
               height: H,
