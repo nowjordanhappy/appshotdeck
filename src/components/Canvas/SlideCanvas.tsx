@@ -189,6 +189,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               slotH={dSlotH}
               vbW={vbW}
               tilt={device.frameTilt}
+              rotate={rotate}
               screenshotDataUrl={device.screenshotDataUrl}
             />
           ) : (
@@ -234,7 +235,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           slotW={dSlotW} slotH={dSlotH}
           W={W} H={H}
           interactive={interactive}
-          rotate={frame.device3d ? 0 : rotate}
+          rotate={rotate}
         />}
       </div>
     )
