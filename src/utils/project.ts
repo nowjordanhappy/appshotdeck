@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import type { Slide } from '../types'
 
-const PROJECT_VERSION = 2
+const PROJECT_VERSION = 3
 
 function extractBase64(dataUrl: string): string | null {
   const parts = dataUrl.split(',')

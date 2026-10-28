@@ -74,6 +74,14 @@ export interface Slide {
   callouts: Callout[]
   textVariants?: Record<string, TextVariant>
   screenshotVariants?: Record<string, string | null>
+  /** This slide's device continues into the next slide (same format). */
+  spanNext?: boolean
+  /** Device horizontal center as % of canvas width while spanning; 100 = on the seam. */
+  spanX?: number
+  /** Stretch this slide's background across both slides of the span. */
+  spanBackground?: boolean
+  /** In-plane device rotation in degrees. */
+  deviceRotate?: number
 }
 
 export type SlideConfig = Omit<Slide, 'screenshotDataUrl' | 'screenshotVariants'>

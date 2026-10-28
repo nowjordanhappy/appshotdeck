@@ -15,7 +15,20 @@ import { useThemeStore } from './store/useThemeStore'
 import { exportSlide } from './utils/export'
 import { getLangMeta } from './utils/translate'
 import { deleteScreenshotVariant } from './utils/db'
-import type { SlideFormat } from './types'
+import type { Slide, SlideFormat } from './types'
+
+// Single source of truth for what a slide shows in a language — preview and export must agree
+function resolveSlideForLanguage(slide: Slide, lang: string): Slide {
+  if (lang === 'en') return slide
+  const textVariant = slide.textVariants?.[lang]
+  const screenshotVariant = slide.screenshotVariants?.[lang]
+  return {
+    ...slide,
+    headline: textVariant?.headline || slide.headline,
+    subtitle: textVariant?.subtitle || slide.subtitle,
+    screenshotDataUrl: screenshotVariant ?? slide.screenshotDataUrl,
+  }
+}
 
 function HiddenExportCanvases({
   canvasRefs,
@@ -32,19 +45,10 @@ function HiddenExportCanvases({
     },
     [canvasRefs]
   )
-  const displaySlides = useMemo(() => {
-    if (exportLanguage === 'en') return slides
-    return slides.map((sl) => {
-      const textVariant = sl.textVariants?.[exportLanguage]
-      const screenshotVariant = sl.screenshotVariants?.[exportLanguage]
-      return {
-        ...sl,
-        headline: textVariant?.headline || sl.headline,
-        subtitle: textVariant?.subtitle || sl.subtitle,
-        screenshotDataUrl: screenshotVariant ?? sl.screenshotDataUrl,
-      }
-    })
-  }, [slides, exportLanguage])
+  const displaySlides = useMemo(
+    () => slides.map((sl) => resolveSlideForLanguage(sl, exportLanguage)),
+    [slides, exportLanguage]
+  )
 
   return (
     <div aria-hidden style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none' }}>
@@ -174,17 +178,10 @@ export default function App() {
   const { t } = useTranslation()
   const activeSlide = slides.find((s) => s.id === activeSlideId)
 
-  const displaySlide = useMemo(() => {
-    if (!activeSlide || activeLanguage === 'en') return activeSlide
-    const textVariant = activeSlide.textVariants?.[activeLanguage]
-    const screenshotVariant = activeSlide.screenshotVariants?.[activeLanguage]
-    return {
-      ...activeSlide,
-      headline: textVariant?.headline || activeSlide.headline,
-      subtitle: textVariant?.subtitle || activeSlide.subtitle,
-      screenshotDataUrl: screenshotVariant ?? activeSlide.screenshotDataUrl,
-    }
-  }, [activeSlide, activeLanguage])
+  const displaySlide = useMemo(
+    () => activeSlide && resolveSlideForLanguage(activeSlide, activeLanguage),
+    [activeSlide, activeLanguage]
+  )
 
   // Apply dark class to <html> whenever theme changes
   useEffect(() => {

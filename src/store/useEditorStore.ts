@@ -92,7 +92,8 @@ export const useEditorStore = create<EditorState>()(
         set((s) => {
           const src = s.slides.find((sl) => sl.id === id)
           if (!src) return s
-          const copy = { ...src, id: crypto.randomUUID() }
+          // A copy inserted right after a spanning slide must not span into the original's partner
+          const copy = { ...src, id: crypto.randomUUID(), spanNext: false }
           const idx = s.slides.findIndex((sl) => sl.id === id)
           const slides = [...s.slides]
           slides.splice(idx + 1, 0, copy)
