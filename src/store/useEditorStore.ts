@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { keepSpanPartners, spanSource, spansNext } from '../utils/span'
+import { clearLegacyPlaceholders } from '../utils/project'
 import { persist } from 'zustand/middleware'
 import type { EditorState, FrameId, ProjectMeta, Slide, SlideConfig, SlideFormat, TextVariant } from '../types'
 import {
@@ -32,8 +33,9 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   screenshotDataUrl: null,
   frame: defaultFrameForFormat(format),
   background: { type: 'gradient', from: '#0F172A', to: '#1E3A5F', angle: 135 },
-  headline: 'Your App Headline',
-  subtitle: 'Short supporting description',
+  // Empty, not placeholder copy: the editor shows a localized hint, and nothing is exported
+  headline: '',
+  subtitle: '',
   textColor: '#ffffff',
   subtitleColor: '#ffffff',
   frameTilt: 18,
@@ -306,7 +308,7 @@ export const useEditorStore = create<EditorState>()(
         const targetLangs = target.languages ?? []
         const newSlides = await Promise.all(
           target.slides.map(async (config) => ({
-            ...config,
+            ...clearLegacyPlaceholders(config),
             screenshotDataUrl: await getScreenshot(`${id}/${config.id}`),
             screenshotVariants: await getSlideVariants(id, config.id, targetLangs),
           }))
@@ -371,7 +373,7 @@ export const useEditorStore = create<EditorState>()(
         const activeLangs = active.languages ?? []
         const slides = await Promise.all(
           active.slides.map(async (config) => ({
-            ...config,
+            ...clearLegacyPlaceholders(config),
             screenshotDataUrl: await getScreenshot(`${state.activeProjectId}/${config.id}`),
             screenshotVariants: await getSlideVariants(state.activeProjectId, config.id, activeLangs),
           }))

@@ -319,6 +319,7 @@ export default function App() {
                         interactive={isActive}
                         spanFrom={spanFrom}
                         spanning={spanning}
+                        hintLanguage={activeLanguage}
                       />
                     </div>
                   )

@@ -85,6 +85,7 @@ Critical details for the 3D renderer:
 - Font weights: `headlineFontWeight` default 700, `subtitleFontWeight` default 400.
 - Font families: `headlineFontFamily` / `subtitleFontFamily` — default `'Inter'`. Available: Inter, Poppins, Montserrat, Nunito, Space Grotesk (all via @fontsource, latin subset only, weights 300/400/600/700).
 - Always add `?? default` fallbacks when reading new fields in components — old persisted slides won't have them.
+- New slides start with **empty** `headline`/`subtitle` (never placeholder copy — it would be saved and exported). The editor preview passes `hintLanguage` to `SlideCanvas`, which draws a faded `canvas.headline_hint`/`subtitle_hint` in that language where text is empty; export canvases don't pass it, so nothing is exported. Older slides saved the English copy as real text; `clearLegacyPlaceholders` (`utils/project.ts`) blanks exact `'Your App Headline'` / `'Short supporting description'` matches, per field, on every load path (rehydrate, `switchProject`, `loadProject`, `loadWorkspace`).
 - `applyToAllSlides(patch)` — merges patch into every slide in the active project.
 
 ### FramePanel device controls (`src/components/Sidebar/FramePanel.tsx`)

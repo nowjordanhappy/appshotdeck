@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Slide } from '../../types'
 import { deviceLayout, slideBackground } from '../../utils/layout'
 import { Device3D } from './Device3D'
@@ -13,10 +14,13 @@ interface Props {
   spanFrom?: Slide
   /** This slide's device continues into the next slide. */
   spanning?: boolean
+  /** Editor preview only: show a faded hint in this language where headline/subtitle are empty. */
+  hintLanguage?: string
 }
 
 export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
-  ({ slide, scale = 1, interactive = true, spanFrom, spanning = false }, ref) => {
+  ({ slide, scale = 1, interactive = true, spanFrom, spanning = false, hintLanguage }, ref) => {
+    const { t } = useTranslation()
     const {
       W, H, landscape, device, frame, rotate, dSlotW, dSlotH, vbW, screenshotRadius, bezelWidth, slotX, slotY,
     } = deviceLayout(slide, spanFrom, spanning)
@@ -35,6 +39,11 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     })()
     const headlineShadow = shadowValue
     const subtitleShadow = shadowValue
+    // Empty text renders nothing (and exports nothing); the editor shows a never-saved hint instead
+    const headline = slide.headline || (hintLanguage ? t('canvas.headline_hint', { lng: hintLanguage }) : '')
+    const subtitle = slide.subtitle || (hintLanguage ? t('canvas.subtitle_hint', { lng: hintLanguage }) : '')
+    const headlineOpacity = slide.headline ? undefined : 0.35
+    const subtitleOpacity = slide.subtitle ? undefined : 0.35
 
     return (
       <div
@@ -67,14 +76,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               textAlign,
             }}
           >
-            {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: slide.headlineFontWeight ?? 700, fontFamily: slide.headlineFontFamily ?? 'Inter', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, textShadow: headlineShadow }}>
-                {slide.headline}
+            {(slide.showHeadline ?? true) && headline && (
+              <div style={{ fontSize: headlineSize, fontWeight: slide.headlineFontWeight ?? 700, fontFamily: slide.headlineFontFamily ?? 'Inter', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, textShadow: headlineShadow, opacity: headlineOpacity }}>
+                {headline}
               </div>
             )}
-            {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: slide.subtitleFontWeight ?? 400, fontFamily: slide.subtitleFontFamily ?? 'Inter', lineHeight: 1.5, color: slide.subtitleColor, textShadow: subtitleShadow }}>
-                {slide.subtitle}
+            {(slide.showSubtitle ?? true) && subtitle && (
+              <div style={{ fontSize: subtitleSize, fontWeight: slide.subtitleFontWeight ?? 400, fontFamily: slide.subtitleFontFamily ?? 'Inter', lineHeight: 1.5, color: slide.subtitleColor, textShadow: subtitleShadow, opacity: subtitleOpacity }}>
+                {subtitle}
               </div>
             )}
           </div>
@@ -91,14 +100,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               textAlign,
             }}
           >
-            {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: slide.headlineFontWeight ?? 700, fontFamily: slide.headlineFontFamily ?? 'Inter', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, textShadow: headlineShadow }}>
-                {slide.headline}
+            {(slide.showHeadline ?? true) && headline && (
+              <div style={{ fontSize: headlineSize, fontWeight: slide.headlineFontWeight ?? 700, fontFamily: slide.headlineFontFamily ?? 'Inter', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, textShadow: headlineShadow, opacity: headlineOpacity }}>
+                {headline}
               </div>
             )}
-            {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: slide.subtitleFontWeight ?? 400, fontFamily: slide.subtitleFontFamily ?? 'Inter', lineHeight: 1.45, color: slide.subtitleColor, textShadow: subtitleShadow }}>
-                {slide.subtitle}
+            {(slide.showSubtitle ?? true) && subtitle && (
+              <div style={{ fontSize: subtitleSize, fontWeight: slide.subtitleFontWeight ?? 400, fontFamily: slide.subtitleFontFamily ?? 'Inter', lineHeight: 1.45, color: slide.subtitleColor, textShadow: subtitleShadow, opacity: subtitleOpacity }}>
+                {subtitle}
               </div>
             )}
           </div>

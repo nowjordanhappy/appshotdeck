@@ -142,7 +142,9 @@
     "remove_both": "Eliminar ambas"
   },
   "canvas": {
-    "upload_prompt": "Sube una captura"
+    "upload_prompt": "Sube una captura",
+    "headline_hint": "Tu titular",
+    "subtitle_hint": "Una línea breve de apoyo"
   },
   "export": {
     "slide": "Exportar esta captura PNG"

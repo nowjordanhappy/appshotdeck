@@ -1,6 +1,7 @@
 import JSZip from 'jszip'
 import type { ProjectMeta, Slide, SlideConfig } from '../types'
 import { getScreenshot, getScreenshotVariant } from './db'
+import { clearLegacyPlaceholders } from './project'
 
 const WORKSPACE_VERSION = 1
 
@@ -153,7 +154,7 @@ export async function loadWorkspace(file: File): Promise<LoadedWorkspaceProject[
               }
             }
 
-            return rest as SlideConfig
+            return clearLegacyPlaceholders(rest) as SlideConfig
           })
         )
 

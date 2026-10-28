@@ -142,7 +142,9 @@
     "remove_both": "Remove both"
   },
   "canvas": {
-    "upload_prompt": "Upload Screenshot"
+    "upload_prompt": "Upload Screenshot",
+    "headline_hint": "Your headline",
+    "subtitle_hint": "A short supporting line"
   },
   "export": {
     "slide": "Export this slide PNG"
