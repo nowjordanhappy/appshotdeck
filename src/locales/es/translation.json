@@ -81,7 +81,13 @@
     "center_h": "Centrar horizontalmente",
     "reset_pos": "Restablecer posición predeterminada",
     "reset_size": "Restablecer tamaño",
-    "reset_tilt": "Restablecer inclinación"
+    "reset_tilt": "Restablecer inclinación",
+    "span_next": "Extender a la siguiente",
+    "span_x": "X",
+    "span_x_reset": "Centrar en la unión",
+    "span_bg": "Fondo compartido",
+    "span_received": "El dispositivo de esta diapositiva continúa desde la diapositiva {{n}}.",
+    "span_edit": "Editar dispositivo en la diapositiva {{n}}"
   },
   "background": {
     "gradients": "Degradados",
@@ -138,7 +144,11 @@
     "size": "Escala el dispositivo de forma uniforme. 100% ocupa el tamaño de ranura predeterminado.",
     "tilt": "Rota el marco 3D en perspectiva. Arrastra izquierda o derecha hasta ±60°.",
     "apply_bg": "Copia el fondo de esta diapositiva a todas las demás del proyecto.",
-    "apply_text": "Copia fuente, tamaño, color, alineación y sombra a todas las demás diapositivas."
+    "apply_text": "Copia fuente, tamaño, color, alineación y sombra a todas las demás diapositivas.",
+    "span": "Dibuja el dispositivo de esta diapositiva cruzando la unión hacia la siguiente. Sube la captura aquí; la siguiente muestra la otra mitad.",
+    "span_unavailable": "Necesita una diapositiva siguiente con el mismo formato.",
+    "span_x": "Posición horizontal del dispositivo. 100 = centrado en la unión entre las dos diapositivas.",
+    "span_bg": "Extiende el fondo de esta diapositiva sobre ambas para que los degradados fluyan por la unión."
   },
   "help": {
     "title": "Ayuda",
@@ -155,6 +165,7 @@
     "tip_apply": "Usa Aplicar a todas en los paneles de Fondo y Texto para sincronizar estilos en todas las diapositivas.",
     "tip_save_all": "Guardar todos los proyectos hace una copia de todo tu espacio de trabajo — útil antes de cambiar de dispositivo.",
     "tip_tilt": "Los marcos 3D tienen un control deslizante de Inclinación en la pestaña Marco. Arrástralo para añadir profundidad.",
+    "tip_span": "Activa Extender a la siguiente en la pestaña Marco para que un teléfono cruce dos diapositivas, como un panorama en la tienda.",
     "tip_slides": "Cada proyecto admite hasta 8 diapositivas, cada una con su propio formato, marco y fondo.",
     "translate_title": "Traducciones de diapositivas",
     "translate_1": "Abre la pestaña Texto y despliega Traducciones",

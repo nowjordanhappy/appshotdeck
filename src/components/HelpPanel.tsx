@@ -109,6 +109,7 @@ export function HelpPanel({ onClose }: Props) {
                 t('help.tip_apply'),
                 t('help.tip_save_all'),
                 t('help.tip_tilt'),
+                t('help.tip_span'),
                 t('help.tip_slides'),
               ].map((tip) => (
                 <li key={tip} className="flex gap-2 text-dim leading-snug">

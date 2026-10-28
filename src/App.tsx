@@ -191,9 +191,18 @@ export default function App() {
     [activeSlide, activeLanguage]
   )
   const activeIndex = slides.findIndex((s) => s.id === activeSlideId)
-  const displaySpanFrom = useMemo(() => {
-    const src = spanSource(slides, activeIndex)
-    return src && resolveSlideForLanguage(src, activeLanguage)
+  // A spanning pair is previewed side by side so the seam can be lined up
+  const previewSlides = useMemo(() => {
+    const left = spansNext(slides, activeIndex) ? activeIndex : spanSource(slides, activeIndex) ? activeIndex - 1 : -1
+    const indices = left >= 0 ? [left, left + 1] : [activeIndex]
+    return indices.map((i) => {
+      const src = spanSource(slides, i)
+      return {
+        slide: resolveSlideForLanguage(slides[i], activeLanguage),
+        spanFrom: src && resolveSlideForLanguage(src, activeLanguage),
+        spanning: spansNext(slides, i),
+      }
+    })
   }, [slides, activeIndex, activeLanguage])
 
   // Apply dark class to <html> whenever theme changes
@@ -256,7 +265,9 @@ export default function App() {
 
   const dims = activeSlide ? FORMAT_DIMS[activeSlide.format] : { W: 1080, H: 1920 }
   const maxScale = activeSlide ? previewScale(activeSlide.format) : 1
-  const fitScale = containerW > 0 ? Math.min(maxScale, (containerW - 48) / dims.W) : maxScale
+  const PAIR_GAP = 8
+  const previewW = dims.W * previewSlides.length
+  const fitScale = containerW > 0 ? Math.min(maxScale, (containerW - 48 - PAIR_GAP * (previewSlides.length - 1)) / previewW) : maxScale
   const scale = fitScale
   const displayW = Math.round(dims.W * scale)
   const displayH = Math.round(dims.H * scale)
@@ -278,30 +289,43 @@ export default function App() {
                 onAdd={() => setShowAddLang(true)}
               />
 
-              <div
-                style={{
-                  width: displayW,
-                  height: displayH,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  borderRadius: 10,
-                  boxShadow: isDark
-                    ? '0 8px 48px rgba(0,0,0,0.6)'
-                    : '0 8px 48px rgba(0,0,0,0.15)',
-                  flexShrink: 0,
-                }}
-              >
-                <SlideCanvas
-                  slide={displaySlide}
-                  scale={scale}
-                  spanFrom={displaySpanFrom}
-                  spanning={spansNext(slides, activeIndex)}
-                />
+              <div className="flex" style={{ gap: PAIR_GAP }}>
+                {previewSlides.map(({ slide, spanFrom, spanning }) => {
+                  const isActive = slide.id === activeSlideId
+                  return (
+                    <div
+                      key={slide.id}
+                      onClick={isActive ? undefined : () => setActiveSlide(slide.id)}
+                      style={{
+                        width: displayW,
+                        height: displayH,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: 10,
+                        boxShadow: isDark
+                          ? '0 8px 48px rgba(0,0,0,0.6)'
+                          : '0 8px 48px rgba(0,0,0,0.15)',
+                        flexShrink: 0,
+                        cursor: isActive ? undefined : 'pointer',
+                        outline: previewSlides.length > 1 && isActive ? '2px solid rgb(129 140 248)' : undefined,
+                        outlineOffset: 2,
+                      }}
+                    >
+                      <SlideCanvas
+                        slide={slide}
+                        scale={scale}
+                        interactive={isActive}
+                        spanFrom={spanFrom}
+                        spanning={spanning}
+                      />
+                    </div>
+                  )
+                })}
               </div>
 
               <div className="flex flex-col items-center gap-1">
                 <div className="flex flex-wrap justify-center gap-2">
-                  {activeSlide && <ReplaceButton slideId={activeSlide.id} />}
+                  {activeSlide && !spanSource(slides, activeIndex) && <ReplaceButton slideId={activeSlide.id} />}
                   {activeSlide && activeLanguage !== 'en' && activeSlide.screenshotVariants?.[activeLanguage] && (
                     <button
                       onClick={async () => {

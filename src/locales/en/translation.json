@@ -81,7 +81,13 @@
     "center_h": "Center horizontally",
     "reset_pos": "Reset to default position",
     "reset_size": "Reset size",
-    "reset_tilt": "Reset tilt"
+    "reset_tilt": "Reset tilt",
+    "span_next": "Span into next slide",
+    "span_x": "X",
+    "span_x_reset": "Center on the seam",
+    "span_bg": "Shared background",
+    "span_received": "The device on this slide continues from slide {{n}}.",
+    "span_edit": "Edit device on slide {{n}}"
   },
   "background": {
     "gradients": "Gradients",
@@ -138,7 +144,11 @@
     "size": "Scales the device up or down uniformly. 100% fills the default slot size.",
     "tilt": "Rotates the 3D frame in perspective. Drag left or right up to ±60°.",
     "apply_bg": "Copies this slide's background to every other slide in the project.",
-    "apply_text": "Copies font, size, color, alignment and shadow to every other slide."
+    "apply_text": "Copies font, size, color, alignment and shadow to every other slide.",
+    "span": "Draws this slide's device across the seam into the next slide. Upload the screenshot here; the next slide shows the other half.",
+    "span_unavailable": "Needs a next slide with the same format.",
+    "span_x": "Horizontal position of the device. 100 = centered on the seam between the two slides.",
+    "span_bg": "Stretches this slide's background across both slides so gradients flow through the seam."
   },
   "help": {
     "title": "Help",
@@ -155,6 +165,7 @@
     "tip_apply": "Use Apply to all in the Background and Text panels to sync a style across every slide at once.",
     "tip_save_all": "Save All Projects backs up your entire workspace — handy before switching devices.",
     "tip_tilt": "3D frames have a Tilt slider in the Frame tab. Drag it to add perspective depth.",
+    "tip_span": "Turn on Span into next slide in the Frame tab to run one phone across two slides, like a panorama in the store.",
     "tip_slides": "Each project supports up to 8 slides, each with its own format, frame, and background.",
     "translate_title": "Slide Translations",
     "translate_1": "Open the Text tab and expand Translations",

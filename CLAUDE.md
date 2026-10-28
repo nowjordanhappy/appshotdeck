@@ -126,11 +126,23 @@ Critical details for the 3D renderer:
 - **Export**: `interactive={false}` on hidden export canvases skips the overlay but renders bubbles normally. `html-to-image` captures them as DOM elements.
 - **Panel controls**: Shape toggle, size slider (40–90%), and per-callout center-H / center-V / center-both buttons.
 
+### Spanning device (`src/utils/span.ts`, `SlideCanvas.tsx`, `FramePanel.tsx`)
+
+- One device drawn across the seam of two adjacent slides (panoramic store screenshots). No double-width canvas: the **same device is rendered in both slides**, shifted by one canvas width on the second, and each canvas's `overflow: hidden` crops its half. Export is unchanged.
+- **Fields live on the left slide (A) only**: `spanNext`, `spanX` (device center as % of W; 100 = on the seam), `spanBackground`, `deviceRotate`. All optional — read with `?? default`. The receiving slide (B) has no span field.
+- **Pairing is by adjacency**: `spanSource(slides, i)` returns the previous slide if it has `spanNext`, the same format, and is not itself a receiver (no chains). `spansNext(slides, i)` is the inverse. Reorder/delete just re-evaluate — never store the pairing.
+- `SlideCanvas` props `spanFrom` (B gets A) and `spanning` (A). B draws **A's** device (frame, scale, offset, tilt, screenshot) at `slotX - W` and hides its own device, callouts and the Replace button; its own screenshot is kept, not deleted.
+- `spanBackground`: both slides draw A's background at `background-size: 200% 100%`, A at position `0 0`, B at `100% 0`.
+- Callers must pass both the slide and its `spanFrom` through `resolveSlideForLanguage` (`App.tsx`) so B shows A's screenshot variant for the same language — preview and `HiddenExportCanvases` share that helper.
+- A span adds **no** WebGL context: B renders A's device *instead of* its own.
+- `duplicateSlide` clears `spanNext` on the copy (the copy lands right after the original and would otherwise chain).
+- Main preview renders the pair side by side (`previewSlides` in `App.tsx`) whenever the active slide spans or receives; clicking the partner selects it.
+
 ### HelpPanel (`src/components/HelpPanel.tsx`)
 
 - Slide-in panel from the right. Fixed position, full height, `w-72`, `z-50`. Backdrop closes it.
 - Opened via `HelpCircle` button in the header (next to the theme toggle).
-- Sections: Getting Started (4 steps), Keyboard Shortcuts (← →, ⌘D, ⌫), Pro Tips (4 items).
+- Sections: Getting Started (4 steps), Keyboard Shortcuts (← →, ⌘D, ⌫), Pro Tips (5 items).
 - Detects Mac vs Windows via `navigator.platform` to show `⌘` or `Ctrl`.
 
 ### Keyboard shortcuts (`src/App.tsx`)
