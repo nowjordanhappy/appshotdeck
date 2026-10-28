@@ -23,6 +23,8 @@ Two frame types, distinguished by whether `device3d` is present on the `FrameDef
 
 ### SlideCanvas (`src/components/Canvas/SlideCanvas.tsx`)
 
+- Format table and device slot math live in `src/utils/layout.ts` (`FORMAT`, `deviceLayout`).
+
 - Always renders at full export resolution (e.g. 1080×1920). CSS `transform: scale()` shrinks it for preview.
 - Branches on `frame.device3d` to choose flat CSS vs `<Device3D>`.
 - `vbW` = viewBox width parsed from `frameViewBox` string — used to convert outerRx / bezelWidth from viewBox units to pixel units.
@@ -138,7 +140,8 @@ Critical details for the 3D renderer:
 - Turning span on with no valid next slide never refuses: `FramePanel` confirms, then `insertSpanSlide(id)` inserts a same-format slide (copying A's background) right after A and sets `spanNext`. A different-format next slide just moves one place right. Turning span on always asks: with a same-format next slide the dialog offers **Use slide N** (its device is hidden, kept — the message warns when it has a screenshot or callouts) or **Add slide**.
 - `duplicateSlide` clears `spanNext` on the copy and, for a spanning slide, inserts the copy after its partner (between them it would become the receiver).
 - `deviceRotate` (in-plane, ±40°, works with or without a span): flat frames = CSS `rotate()` on the slot div (html-to-image renders it). 3D frames = an **outer** `<group rotation-z>` around `PhoneModel` (inside its tilt Euler it would roll around the tilted axis); the WebGL canvas grows to the rotated slot's bounding box, centered on the slot, and the FOV widens by the same height ratio at the same camera distance, so the device keeps its pixel size and perspective. `SizeEnforcer` also syncs `fov` (the Canvas `camera` prop is mount-only). `rotate = 0` takes the original path — existing 3D exports stay byte-identical. **Never CSS-rotate the WebGL canvas**: the export composite places it by `getBoundingClientRect()`, which would return the rotated bounding box. `CalloutLayer` gets the same `rotate` and un-rotates the mouse point around the slot center before its slot-% hit-test, and draws the drag preview inside a box rotated like the device, so callouts can be created on a rotated device.
-- `SlideStrip`: an indigo link badge sits between paired thumbnails; a receiving slide's thumbnail hides its own (hidden) screenshot.
+- `SlideStrip`: an indigo link badge sits between paired thumbnails, and both halves of a pair draw the shared device at its real scaled position (`SpanThumb`), so the pair reads as one picture. Other thumbnails are unchanged (background + cover screenshot).
+- Device geometry (`FORMAT`, `deviceLayout`, `slideBackground`) lives in `src/utils/layout.ts`, shared by `SlideCanvas` and the strip — change slot math there, never in only one place.
 - Deleting a slide of a pair (strip × or Delete key) goes through `SlideDeleteDialog`: **Remove slide N** (the partner becomes a normal slide) or **Remove both** (hidden when only the pair is left). Single slides keep the old behaviour (strip × deletes at once, Delete key confirms).
 - Main preview renders the pair side by side (`previewSlides` in `App.tsx`) whenever the active slide spans or receives; clicking the partner selects it.
 

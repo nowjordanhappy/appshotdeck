@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
 import { spanSource, spansNext } from '../utils/span'
 import { SlideDeleteDialog } from './SlideDeleteDialog'
+import { deviceLayout, slideBackground } from '../utils/layout'
+import type { Slide } from '../types'
 
 const FORMAT_BADGE: Record<string, string> = {
   'phone':     '📱',
@@ -12,6 +14,30 @@ const FORMAT_BADGE: Record<string, string> = {
   'iphone-69': '🍎 6.9',
   'iphone-65': '🍎 6.5',
   'ipad-13':   '🍎 iPad',
+}
+
+// Thumbnail of one half of a span pair: the shared device drawn at its real (scaled-down)
+// position, so the two thumbnails read as one picture across the seam.
+function SpanThumb({ slide, spanFrom, spanning, width }: { slide: Slide; spanFrom?: Slide; spanning: boolean; width: number }) {
+  const { W, device, frame, rotate, vbW, dSlotW, dSlotH, slotX, slotY } = deviceLayout(slide, spanFrom, spanning)
+  const k = width / W
+  const outerRx = frame.outerRx ?? frame.device3d?.outerRx ?? 0
+  const bezel = frame.bezel?.width ?? frame.device3d?.bezelWidth ?? 0
+  const radius = outerRx * dSlotW / vbW * k
+  const bezelPx = bezel * dSlotW / vbW * k
+  return (
+    <div style={{
+      position: 'absolute', left: slotX * k, top: slotY * k, width: dSlotW * k, height: dSlotH * k,
+      transform: rotate ? `rotate(${rotate}deg)` : undefined,
+      borderRadius: radius, padding: bezelPx, overflow: 'hidden',
+      background: frame.bezel?.color ?? frame.device3d?.shellColor,
+    }}>
+      {device.screenshotDataUrl && (
+        <img src={device.screenshotDataUrl} alt="" className="w-full h-full object-cover object-top"
+          style={{ borderRadius: Math.max(0, radius - bezelPx) }} />
+      )}
+    </div>
+  )
 }
 
 export function SlideStrip() {
@@ -52,8 +78,9 @@ export function SlideStrip() {
           (spansNext(slides, dragIdx) && idx === dragIdx + 1) ||
           (!!spanSource(slides, dragIdx) && idx === dragIdx - 1))
         const isOver = overIdx === idx && dragIdx !== idx
-        // A receiving slide's own screenshot is hidden on the canvas, so hide it here too
-        const isReceiving = !!spanSource(slides, idx)
+        const spanFrom = spanSource(slides, idx)
+        const spanning = spansNext(slides, idx)
+        const inPair = !!spanFrom || spanning
 
         return (
           <div
@@ -77,9 +104,10 @@ export function SlideStrip() {
                 isOver ? 'border-indigo-400 scale-105' :
                 isActive ? 'border-indigo-400' : 'border-black/20 dark:border-white/20 hover:border-black/40 dark:hover:border-white/40'
               }`}
-              style={{ width: thumbW, height: thumbH, ...bgStyle }}
+              style={{ width: thumbW, height: thumbH, ...(inPair ? slideBackground(slide, spanFrom, spanning) : bgStyle) }}
             >
-              {slide.screenshotDataUrl && !isReceiving && (
+              {inPair && <SpanThumb slide={slide} spanFrom={spanFrom} spanning={spanning} width={thumbW - 4 /* inside border-2 */} />}
+              {slide.screenshotDataUrl && !inPair && (
                 <img src={slide.screenshotDataUrl} alt="" className="w-full h-full object-cover opacity-70" />
               )}
               <span className="absolute top-0.5 left-0.5 text-[8px] text-white/60 leading-none">
