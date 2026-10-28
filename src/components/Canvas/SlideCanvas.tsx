@@ -57,6 +57,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const device = spanFrom ?? slide
     const isSpanned = spanning || !!spanFrom
     const frame = frameById(device.frame)
+    const rotate = device.deviceRotate ?? 0
 
     // Apply device scale (portrait only; tablets keep their fixed layout)
     const deviceScaleFactor = (device.deviceScale ?? 100) / 100
@@ -178,6 +179,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
         <div
           style={{
             position: 'absolute', left: slotX, top: slotY, width: dSlotW, height: dSlotH,
+            transform: rotate && !frame.device3d ? `rotate(${rotate}deg)` : undefined,
           }}
         >
           {frame.device3d ? (
@@ -232,6 +234,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           slotW={dSlotW} slotH={dSlotH}
           W={W} H={H}
           interactive={interactive}
+          rotate={frame.device3d ? 0 : rotate}
         />}
       </div>
     )

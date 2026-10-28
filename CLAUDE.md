@@ -136,6 +136,7 @@ Critical details for the 3D renderer:
 - Callers must pass both the slide and its `spanFrom` through `resolveSlideForLanguage` (`App.tsx`) so B shows A's screenshot variant for the same language — preview and `HiddenExportCanvases` share that helper.
 - A span adds **no** WebGL context: B renders A's device *instead of* its own.
 - `duplicateSlide` clears `spanNext` on the copy (the copy lands right after the original and would otherwise chain).
+- `deviceRotate` (in-plane, ±40°, works with or without a span): flat frames = CSS `rotate()` on the slot div (html-to-image renders it). `CalloutLayer` gets the same `rotate` and un-rotates the mouse point around the slot center before its slot-% hit-test, and draws the drag preview inside a box rotated like the device, so callouts can be created on a rotated device.
 - Main preview renders the pair side by side (`previewSlides` in `App.tsx`) whenever the active slide spans or receives; clicking the partner selects it.
 
 ### HelpPanel (`src/components/HelpPanel.tsx`)

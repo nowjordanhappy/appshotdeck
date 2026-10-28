@@ -134,6 +134,27 @@ export function FramePanel() {
         </>
       )}
 
+      {!activeFrame.device3d && (
+        <div className="flex items-center gap-2 pt-2 pr-1">
+          <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
+            {t('frame.rotate')} <Tooltip text={t('tips.rotate')} />
+          </span>
+          <input
+            type="range" min={-40} max={40} value={slide.deviceRotate ?? 0}
+            onChange={(e) => updateSlide(activeSlideId, { deviceRotate: Number(e.target.value) })}
+            className="flex-1 min-w-0"
+          />
+          <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.deviceRotate ?? 0}°</span>
+          <button
+            onClick={() => updateSlide(activeSlideId, { deviceRotate: 0 })}
+            className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+            title={t('frame.reset_rotate')}
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+      )}
+
       {activeFrame.tilt && (
         <div className="flex items-center gap-2 pt-2 pr-1">
           <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">

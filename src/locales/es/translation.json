@@ -87,7 +87,9 @@
     "span_x_reset": "Centrar en la unión",
     "span_bg": "Fondo compartido",
     "span_received": "El dispositivo de esta diapositiva continúa desde la diapositiva {{n}}.",
-    "span_edit": "Editar dispositivo en la diapositiva {{n}}"
+    "span_edit": "Editar dispositivo en la diapositiva {{n}}",
+    "rotate": "Girar",
+    "reset_rotate": "Restablecer giro"
   },
   "background": {
     "gradients": "Degradados",
@@ -148,7 +150,8 @@
     "span": "Dibuja el dispositivo de esta diapositiva cruzando la unión hacia la siguiente. Sube la captura aquí; la siguiente muestra la otra mitad.",
     "span_unavailable": "Necesita una diapositiva siguiente con el mismo formato.",
     "span_x": "Posición horizontal del dispositivo. 100 = centrado en la unión entre las dos diapositivas.",
-    "span_bg": "Extiende el fondo de esta diapositiva sobre ambas para que los degradados fluyan por la unión."
+    "span_bg": "Extiende el fondo de esta diapositiva sobre ambas para que los degradados fluyan por la unión.",
+    "rotate": "Gira el dispositivo en el plano del lienzo, hasta ±40°."
   },
   "help": {
     "title": "Ayuda",

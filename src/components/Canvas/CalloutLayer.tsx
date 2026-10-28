@@ -11,6 +11,8 @@ interface Props {
   W: number
   H: number
   interactive: boolean
+  /** In-plane device rotation (degrees) around the slot center. */
+  rotate?: number
 }
 
 interface SlotDrag {
@@ -28,7 +30,7 @@ interface BubbleDrag {
   startBY: number
 }
 
-export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interactive }: Props) {
+export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interactive, rotate = 0 }: Props) {
   const { updateSlide, activeSlideId } = useEditorStore()
   const callouts: Callout[] = slide.callouts ?? []
 
@@ -51,14 +53,28 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
     }
   }
 
-  // ── Convert canvas pixels → slot % (clamped 0–100) ────────────────────────
-  const toSlotPct = (cpx: number, cpy: number) => ({
-    x: Math.max(0, Math.min(100, (cpx - slotX) / slotW * 100)),
-    y: Math.max(0, Math.min(100, (cpy - slotY) / slotH * 100)),
-  })
+  // ── Undo the device rotation so the slot can be hit-tested axis-aligned ───
+  const unrotate = (cpx: number, cpy: number) => {
+    if (!rotate) return { x: cpx, y: cpy }
+    const cx = slotX + slotW / 2, cy = slotY + slotH / 2
+    const a = -rotate * Math.PI / 180
+    const dx = cpx - cx, dy = cpy - cy
+    return { x: cx + dx * Math.cos(a) - dy * Math.sin(a), y: cy + dx * Math.sin(a) + dy * Math.cos(a) }
+  }
 
-  const inSlot = (cpx: number, cpy: number) =>
-    cpx >= slotX && cpx <= slotX + slotW && cpy >= slotY && cpy <= slotY + slotH
+  // ── Convert canvas pixels → slot % (clamped 0–100) ────────────────────────
+  const toSlotPct = (cpx: number, cpy: number) => {
+    const p = unrotate(cpx, cpy)
+    return {
+      x: Math.max(0, Math.min(100, (p.x - slotX) / slotW * 100)),
+      y: Math.max(0, Math.min(100, (p.y - slotY) / slotH * 100)),
+    }
+  }
+
+  const inSlot = (cpx: number, cpy: number) => {
+    const p = unrotate(cpx, cpy)
+    return p.x >= slotX && p.x <= slotX + slotW && p.y >= slotY && p.y <= slotY + slotH
+  }
 
   // ── Hit-test a canvas point against all bubbles ────────────────────────────
   const hitBubble = (cpx: number, cpy: number): Callout | null => {
@@ -201,10 +217,10 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
     setSlotDrag(null)
   }
 
-  // Preview rect in canvas pixels
+  // Preview rect in slot pixels (drawn inside a slot-shaped box rotated like the device)
   const preview = slotDrag ? {
-    left:   slotX + Math.min(slotDrag.startX, slotDrag.curX) / 100 * slotW,
-    top:    slotY + Math.min(slotDrag.startY, slotDrag.curY) / 100 * slotH,
+    left:   Math.min(slotDrag.startX, slotDrag.curX) / 100 * slotW,
+    top:    Math.min(slotDrag.startY, slotDrag.curY) / 100 * slotH,
     width:  Math.abs(slotDrag.curX - slotDrag.startX) / 100 * slotW,
     height: Math.abs(slotDrag.curY - slotDrag.startY) / 100 * slotH,
   } : null
@@ -227,15 +243,20 @@ export function CalloutLayer({ slide, slotX, slotY, slotW, slotH, W, H, interact
         >
           {preview && (
             <div style={{
-              position: 'absolute',
-              left: preview.left, top: preview.top,
-              width: preview.width, height: preview.height,
-              border: `${borderW}px dashed rgba(255,255,255,0.9)`,
-              background: 'rgba(255,255,255,0.08)',
-              boxSizing: 'border-box',
-              borderRadius: cornerR,
+              position: 'absolute', left: slotX, top: slotY, width: slotW, height: slotH,
+              transform: rotate ? `rotate(${rotate}deg)` : undefined,
               pointerEvents: 'none',
-            }} />
+            }}>
+              <div style={{
+                position: 'absolute',
+                left: preview.left, top: preview.top,
+                width: preview.width, height: preview.height,
+                border: `${borderW}px dashed rgba(255,255,255,0.9)`,
+                background: 'rgba(255,255,255,0.08)',
+                boxSizing: 'border-box',
+                borderRadius: cornerR,
+              }} />
+            </div>
           )}
         </div>
       )}

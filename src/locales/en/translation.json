@@ -87,7 +87,9 @@
     "span_x_reset": "Center on the seam",
     "span_bg": "Shared background",
     "span_received": "The device on this slide continues from slide {{n}}.",
-    "span_edit": "Edit device on slide {{n}}"
+    "span_edit": "Edit device on slide {{n}}",
+    "rotate": "Rotate",
+    "reset_rotate": "Reset rotation"
   },
   "background": {
     "gradients": "Gradients",
@@ -148,7 +150,8 @@
     "span": "Draws this slide's device across the seam into the next slide. Upload the screenshot here; the next slide shows the other half.",
     "span_unavailable": "Needs a next slide with the same format.",
     "span_x": "Horizontal position of the device. 100 = centered on the seam between the two slides.",
-    "span_bg": "Stretches this slide's background across both slides so gradients flow through the seam."
+    "span_bg": "Stretches this slide's background across both slides so gradients flow through the seam.",
+    "rotate": "Rotates the device flat on the canvas, up to ±40°."
   },
   "help": {
     "title": "Help",
