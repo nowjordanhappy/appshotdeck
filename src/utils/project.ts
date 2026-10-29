@@ -101,7 +101,7 @@ export interface LoadedProject {
 }
 
 export async function loadProject(file: File): Promise<LoadedProject> {
-  const zip = await JSZip.loadAsync(file)
+  const zip = await JSZip.loadAsync(await file.arrayBuffer())
 
   const configFile = zip.file('config.json')
   if (!configFile) throw new Error('Invalid project file: missing config.json')

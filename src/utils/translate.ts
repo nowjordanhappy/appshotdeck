@@ -20,7 +20,7 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function applyProtectedWords(text: string, words: string[]): { processed: string; restore: (t: string) => string } {
+export function applyProtectedWords(text: string, words: string[]): { processed: string; restore: (t: string) => string } {
   if (!words.length) return { processed: text, restore: (t) => t }
 
   const tokenMap: [string, string][] = []

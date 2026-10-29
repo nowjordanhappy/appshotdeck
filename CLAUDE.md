@@ -231,7 +231,7 @@ Every schema change must be backward AND forward compatible:
 
 - No comments unless the WHY is non-obvious.
 - Prefer editing existing files over creating new ones.
-- **Tests**: Vitest, next to the code (`src/utils/span.test.ts`). Pure logic — pairing, reorder, layout math, load migrations — gets a test when it changes; keep rules as pure functions in `utils/` (not inside store `set()` callbacks) so they can be tested.
+- **Tests**: Vitest, next to the code (`src/utils/*.test.ts`: span/layout rules, protected words, loading project ZIPs — old v2 ZIPs included). Loaders read ZIPs via `file.arrayBuffer()` so they also run under Node. Pure logic — pairing, reorder, layout math, load migrations — gets a test when it changes; keep rules as pure functions in `utils/` (not inside store `set()` callbacks) so they can be tested.
 - Tailwind CSS v3 (not v4) — `tailwind.config.ts` is present.
 - **i18n is mandatory** — every user-visible string (button labels, placeholders, titles, tooltips, error messages, helper text) must use `t()` from `react-i18next`. Never hardcode text in JSX. Always add the key to **both** `src/locales/en/translation.json` and `src/locales/es/translation.json` at the same time. For JSX with embedded links/components use `<Trans i18nKey="..." components={{ ... }} />`. Components that don't already import `useTranslation` must add it.
 - Background presets: `GRADIENT_PRESETS` (dark), `LIGHT_GRADIENT_PRESETS` (light), `SOLID_PRESETS` in `src/data/backgrounds.ts`.

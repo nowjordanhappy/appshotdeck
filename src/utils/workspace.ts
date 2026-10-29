@@ -117,7 +117,7 @@ export async function saveWorkspace(
 // ─── Load ────────────────────────────────────────────────────────────────────
 
 export async function loadWorkspace(file: File): Promise<LoadedWorkspaceProject[]> {
-  const zip = await JSZip.loadAsync(file)
+  const zip = await JSZip.loadAsync(await file.arrayBuffer())
 
   const configFile = zip.file('workspace.json')
   if (!configFile) throw new Error('Invalid workspace file: missing workspace.json')
