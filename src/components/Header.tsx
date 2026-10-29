@@ -144,14 +144,15 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [saveOpen, loadOpen, exportOpen])
 
-  const buildEntries = useCallback(() => {
+  // Every PNG is prefixed with its language (en-slide-01, es-slide-01) so files never mix up
+  const buildEntries = useCallback((lang: string) => {
     const perFormatCount: Record<string, number> = {}
     return slides
       .map((sl) => {
         const el = canvasRefs.current.get(sl.id)
         if (!el) return null
         const n = (perFormatCount[sl.format] = (perFormatCount[sl.format] ?? 0) + 1)
-        return { el, format: sl.format, name: `slide-${String(n).padStart(2, '0')}` } satisfies ExportEntry
+        return { el, format: sl.format, name: `${lang}-slide-${String(n).padStart(2, '0')}` } satisfies ExportEntry
       })
       .filter(Boolean) as ExportEntry[]
   }, [slides, canvasRefs])
@@ -161,8 +162,7 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
     exporting.current = true
     try {
       flushSync(() => setExportLanguage(lang))
-      const suffix = lang === 'en' ? '' : `-${lang}`
-      await exportAll(buildEntries(), `${projectName}${suffix}`)
+      await exportAll(buildEntries(lang), `${projectName}-${lang}`)
     } finally {
       flushSync(() => setExportLanguage('en'))
       exporting.current = false
@@ -177,7 +177,7 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
       const zip = new JSZip()
       for (const lang of langs) {
         flushSync(() => setExportLanguage(lang))
-        await addEntriesToZip(zip, buildEntries(), langs.length > 1 ? lang : '')
+        await addEntriesToZip(zip, buildEntries(lang), langs.length > 1 ? lang : '')
       }
       await downloadZip(zip, langs.length > 1 ? `${projectName}-all-languages` : projectName)
     } finally {
@@ -191,8 +191,10 @@ export function Header({ canvasRefs, setExportLanguage }: Props) {
   }, [slides, projectName, languages, protectedWords])
 
   const handleSaveAll = useCallback(async () => {
-    const { projects, activeProjectId, slides: activeSlides, activeSlideId } = useEditorStore.getState()
-    await saveWorkspace(projects, activeProjectId, activeSlides, activeSlideId)
+    const { projects, activeProjectId, slides: activeSlides, activeSlideId, languages, protectedWords } = useEditorStore.getState()
+    // The active project's meta only gets its languages on switch/persist; use the live values
+    const current = projects.map((p) => (p.id === activeProjectId ? { ...p, languages, protectedWords } : p))
+    await saveWorkspace(current, activeProjectId, activeSlides, activeSlideId)
   }, [])
 
   const handleLoadAll = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
