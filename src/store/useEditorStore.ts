@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { keepSpanPartners, spanSource, spansNext } from '../utils/span'
+import { keepSpanPartners, reorderWithPairs, spansNext } from '../utils/span'
 import { clearLegacyPlaceholders } from '../utils/project'
 import { persist } from 'zustand/middleware'
 import type { EditorState, FrameId, ProjectMeta, Slide, SlideConfig, SlideFormat, TextVariant } from '../types'
@@ -147,18 +147,8 @@ export const useEditorStore = create<EditorState>()(
 
       reorderSlides: (from, to) =>
         set((s) => {
-          // A spanning pair moves as one block, whichever of its two slides is dragged
-          const start = spansNext(s.slides, from) ? from : spanSource(s.slides, from) ? from - 1 : from
-          const len = start === from && !spansNext(s.slides, from) ? 1 : 2
-          if (to >= start && to < start + len) return s
-          const block = s.slides.slice(start, start + len)
-          const slides = [...s.slides.slice(0, start), ...s.slides.slice(start + len)]
-          const movingRight = to > start
-          let pos = movingRight ? to - len + 1 : to
-          // Never drop between the two slides of another pair — land just past it
-          if (pos > 0 && pos < slides.length && spansNext(slides, pos - 1)) pos += movingRight ? 1 : -1
-          slides.splice(pos, 0, ...block)
-          return { slides: keepSpanPartners(s.slides, slides) }
+          const slides = reorderWithPairs(s.slides, from, to)
+          return slides === s.slides ? s : { slides }
         }),
 
       applyToAllSlides: (patch) =>
