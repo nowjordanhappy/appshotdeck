@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { keepSpanPartners, reorderWithPairs, spansNext } from '../utils/span'
+import { clearLegacyPlaceholders } from '../utils/project'
 import { persist } from 'zustand/middleware'
 import type { EditorState, FrameId, ProjectMeta, Slide, SlideConfig, SlideFormat, TextVariant } from '../types'
 import {
@@ -31,8 +33,9 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   screenshotDataUrl: null,
   frame: defaultFrameForFormat(format),
   background: { type: 'gradient', from: '#0F172A', to: '#1E3A5F', angle: 135 },
-  headline: 'Your App Headline',
-  subtitle: 'Short supporting description',
+  // Empty, not placeholder copy: the editor shows a localized hint, and nothing is exported
+  headline: '',
+  subtitle: '',
   textColor: '#ffffff',
   subtitleColor: '#ffffff',
   frameTilt: 18,
@@ -85,17 +88,30 @@ export const useEditorStore = create<EditorState>()(
         set((s) => {
           const active = s.slides.find((sl) => sl.id === s.activeSlideId)
           const slide = defaultSlide(active?.format ?? 'phone')
-          return { slides: [...s.slides, slide], activeSlideId: slide.id }
+          return { slides: keepSpanPartners(s.slides, [...s.slides, slide]), activeSlideId: slide.id }
+        }),
+
+      insertSpanSlide: (id) =>
+        set((s) => {
+          const idx = s.slides.findIndex((sl) => sl.id === id)
+          if (idx < 0) return s
+          const src = s.slides[idx]
+          const partner = { ...defaultSlide(src.format), background: src.background }
+          const slides = s.slides.map((sl) => (sl.id === id ? { ...sl, spanNext: true } : sl))
+          slides.splice(idx + 1, 0, partner)
+          return { slides }
         }),
 
       duplicateSlide: (id) =>
         set((s) => {
           const src = s.slides.find((sl) => sl.id === id)
           if (!src) return s
-          const copy = { ...src, id: crypto.randomUUID() }
+          // The copy never spans, and goes after a spanning slide's partner — inserted between
+          // them it would become the receiver and break the original pair
+          const copy = { ...src, id: crypto.randomUUID(), spanNext: false }
           const idx = s.slides.findIndex((sl) => sl.id === id)
           const slides = [...s.slides]
-          slides.splice(idx + 1, 0, copy)
+          slides.splice(spansNext(s.slides, idx) ? idx + 2 : idx + 1, 0, copy)
           if (src.screenshotDataUrl) {
             copyScreenshot(`${s.activeProjectId}/${id}`, `${s.activeProjectId}/${copy.id}`)
           }
@@ -110,7 +126,7 @@ export const useEditorStore = create<EditorState>()(
           if (s.slides.length === 1) return s
           deleteScreenshot(`${s.activeProjectId}/${id}`)
           deleteSlideVariantScreenshots(s.activeProjectId, id)
-          const slides = s.slides.filter((sl) => sl.id !== id)
+          const slides = keepSpanPartners(s.slides, s.slides.filter((sl) => sl.id !== id))
           const activeSlideId = s.activeSlideId === id ? slides[0].id : s.activeSlideId
           return { slides, activeSlideId }
         }),
@@ -131,10 +147,8 @@ export const useEditorStore = create<EditorState>()(
 
       reorderSlides: (from, to) =>
         set((s) => {
-          const slides = [...s.slides]
-          const [moved] = slides.splice(from, 1)
-          slides.splice(to, 0, moved)
-          return { slides }
+          const slides = reorderWithPairs(s.slides, from, to)
+          return slides === s.slides ? s : { slides }
         }),
 
       applyToAllSlides: (patch) =>
@@ -284,7 +298,7 @@ export const useEditorStore = create<EditorState>()(
         const targetLangs = target.languages ?? []
         const newSlides = await Promise.all(
           target.slides.map(async (config) => ({
-            ...config,
+            ...clearLegacyPlaceholders(config),
             screenshotDataUrl: await getScreenshot(`${id}/${config.id}`),
             screenshotVariants: await getSlideVariants(id, config.id, targetLangs),
           }))
@@ -349,7 +363,7 @@ export const useEditorStore = create<EditorState>()(
         const activeLangs = active.languages ?? []
         const slides = await Promise.all(
           active.slides.map(async (config) => ({
-            ...config,
+            ...clearLegacyPlaceholders(config),
             screenshotDataUrl: await getScreenshot(`${state.activeProjectId}/${config.id}`),
             screenshotVariants: await getSlideVariants(state.activeProjectId, config.id, activeLangs),
           }))

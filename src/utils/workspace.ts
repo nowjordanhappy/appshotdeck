@@ -1,6 +1,7 @@
 import JSZip from 'jszip'
 import type { ProjectMeta, Slide, SlideConfig } from '../types'
 import { getScreenshot, getScreenshotVariant } from './db'
+import { clearLegacyPlaceholders } from './project'
 
 const WORKSPACE_VERSION = 1
 
@@ -116,7 +117,7 @@ export async function saveWorkspace(
 // ─── Load ────────────────────────────────────────────────────────────────────
 
 export async function loadWorkspace(file: File): Promise<LoadedWorkspaceProject[]> {
-  const zip = await JSZip.loadAsync(file)
+  const zip = await JSZip.loadAsync(await file.arrayBuffer())
 
   const configFile = zip.file('workspace.json')
   if (!configFile) throw new Error('Invalid workspace file: missing workspace.json')
@@ -153,7 +154,7 @@ export async function loadWorkspace(file: File): Promise<LoadedWorkspaceProject[
               }
             }
 
-            return rest as SlideConfig
+            return clearLegacyPlaceholders(rest) as SlideConfig
           })
         )
 

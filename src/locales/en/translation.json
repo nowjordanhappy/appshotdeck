@@ -81,7 +81,22 @@
     "center_h": "Center horizontally",
     "reset_pos": "Reset to default position",
     "reset_size": "Reset size",
-    "reset_tilt": "Reset tilt"
+    "reset_tilt": "Reset tilt",
+    "span_next": "Span into next slide",
+    "span_x": "X",
+    "span_x_reset": "Center on the seam",
+    "span_bg": "Shared background",
+    "span_received": "The device on this slide continues from slide {{n}}.",
+    "span_edit": "Edit device on slide {{n}}",
+    "rotate": "Rotate",
+    "reset_rotate": "Reset rotation",
+    "span_insert_new": "There's no slide after this one. Add a new slide to continue the device into?",
+    "span_insert_mismatch": "Slide {{n}} has a different format. Insert a new slide after this one to continue the device into? Slide {{n}} moves one place right.",
+    "span_insert_confirm": "Add slide",
+    "span_use_or_insert": "Slide {{n}} already has its own screenshot or callouts. Use slide {{n}} (its device is hidden, not deleted — it comes back if you turn span off) or insert a new slide after this one?",
+    "span_use_or_insert_empty": "Continue the device into slide {{n}}, or insert a new slide after this one?",
+    "span_use_next": "Use slide {{n}}",
+    "span_x_label": "Span horizontal position"
   },
   "background": {
     "gradients": "Gradients",
@@ -119,10 +134,19 @@
   },
   "strip": {
     "duplicate": "Duplicate",
-    "remove": "Remove"
+    "remove": "Remove",
+    "span_link": "Device spans slides {{a}} and {{b}}",
+    "confirm_remove": "Remove this slide? This can't be undone.",
+    "confirm_remove_pair": "Slide {{n}} shares its device with slide {{m}}. Remove only slide {{n}} (slide {{m}} becomes a normal slide), or both? This can't be undone.",
+    "confirm_remove_pair_only": "Slide {{n}} shares its device with slide {{m}}. Remove slide {{n}}? Slide {{m}} becomes a normal slide. This can't be undone.",
+    "remove_only": "Remove slide {{n}}",
+    "remove_both": "Remove both"
   },
   "canvas": {
-    "upload_prompt": "Upload Screenshot"
+    "upload_prompt": "Upload Screenshot",
+    "headline_hint": "Your headline",
+    "subtitle_hint": "A short supporting line",
+    "select_slide": "Select slide {{n}}"
   },
   "export": {
     "slide": "Export this slide PNG"
@@ -138,7 +162,11 @@
     "size": "Scales the device up or down uniformly. 100% fills the default slot size.",
     "tilt": "Rotates the 3D frame in perspective. Drag left or right up to ±60°.",
     "apply_bg": "Copies this slide's background to every other slide in the project.",
-    "apply_text": "Copies font, size, color, alignment and shadow to every other slide."
+    "apply_text": "Copies font, size, color, alignment and shadow to every other slide.",
+    "span": "Draws this slide's device across the seam into the next slide. Upload the screenshot here; the next slide shows the other half.",
+    "span_x": "Horizontal position of the device. 100 = centered on the seam between the two slides.",
+    "span_bg": "Stretches this slide's background across both slides so gradients flow through the seam.",
+    "rotate": "Rotates the device flat on the canvas, up to ±40°."
   },
   "help": {
     "title": "Help",
@@ -170,7 +198,12 @@
     "screenshots_title": "Per-language Screenshots",
     "screenshots_1": "After adding translations, use the Replace button below the canvas to upload language-specific screenshots",
     "screenshots_2": "The language label below the buttons shows which variant you're replacing (e.g., ES · Español · Spanish)",
-    "screenshots_3": "Use 'Use default' to remove a custom screenshot and fall back to the EN default"
+    "screenshots_3": "Use 'Use default' to remove a custom screenshot and fall back to the EN default",
+    "span_title": "Device across two slides",
+    "span_1": "Add the screenshot to the first slide, then in the Frame tab turn on Span into next slide",
+    "span_2": "Choose to use the next slide or add a new one — its own device is hidden, not deleted",
+    "span_3": "Move X to slide the device across the seam; Rotate, Pos and Size work as usual",
+    "span_4": "Turn on Shared background so a gradient flows from one slide into the next"
   },
   "callout": {
     "add": "Add callout",

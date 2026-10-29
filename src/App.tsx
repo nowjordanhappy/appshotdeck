@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { Download, Plus, ChevronDown, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Header } from './components/Header'
-import { ConfirmDialog } from './components/ConfirmDialog'
+import { SlideDeleteDialog } from './components/SlideDeleteDialog'
 import { ToastContainer } from './components/ToastContainer'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
@@ -15,7 +15,21 @@ import { useThemeStore } from './store/useThemeStore'
 import { exportSlide } from './utils/export'
 import { getLangMeta } from './utils/translate'
 import { deleteScreenshotVariant } from './utils/db'
-import type { SlideFormat } from './types'
+import { spanSource, spansNext } from './utils/span'
+import type { Slide, SlideFormat } from './types'
+
+// Single source of truth for what a slide shows in a language — preview and export must agree
+function resolveSlideForLanguage(slide: Slide, lang: string): Slide {
+  if (lang === 'en') return slide
+  const textVariant = slide.textVariants?.[lang]
+  const screenshotVariant = slide.screenshotVariants?.[lang]
+  return {
+    ...slide,
+    headline: textVariant?.headline || slide.headline,
+    subtitle: textVariant?.subtitle || slide.subtitle,
+    screenshotDataUrl: screenshotVariant ?? slide.screenshotDataUrl,
+  }
+}
 
 function HiddenExportCanvases({
   canvasRefs,
@@ -32,24 +46,22 @@ function HiddenExportCanvases({
     },
     [canvasRefs]
   )
-  const displaySlides = useMemo(() => {
-    if (exportLanguage === 'en') return slides
-    return slides.map((sl) => {
-      const textVariant = sl.textVariants?.[exportLanguage]
-      const screenshotVariant = sl.screenshotVariants?.[exportLanguage]
-      return {
-        ...sl,
-        headline: textVariant?.headline || sl.headline,
-        subtitle: textVariant?.subtitle || sl.subtitle,
-        screenshotDataUrl: screenshotVariant ?? sl.screenshotDataUrl,
-      }
-    })
-  }, [slides, exportLanguage])
+  const displaySlides = useMemo(
+    () => slides.map((sl) => resolveSlideForLanguage(sl, exportLanguage)),
+    [slides, exportLanguage]
+  )
 
   return (
     <div aria-hidden style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none' }}>
-      {displaySlides.map((slide) => (
-        <SlideCanvas key={slide.id} ref={setRef(slide.id)} slide={slide} interactive={false} />
+      {displaySlides.map((slide, i) => (
+        <SlideCanvas
+          key={slide.id}
+          ref={setRef(slide.id)}
+          slide={slide}
+          interactive={false}
+          spanFrom={spanSource(displaySlides, i)}
+          spanning={spansNext(displaySlides, i)}
+        />
       ))}
     </div>
   )
@@ -174,17 +186,26 @@ export default function App() {
   const { t } = useTranslation()
   const activeSlide = slides.find((s) => s.id === activeSlideId)
 
-  const displaySlide = useMemo(() => {
-    if (!activeSlide || activeLanguage === 'en') return activeSlide
-    const textVariant = activeSlide.textVariants?.[activeLanguage]
-    const screenshotVariant = activeSlide.screenshotVariants?.[activeLanguage]
-    return {
-      ...activeSlide,
-      headline: textVariant?.headline || activeSlide.headline,
-      subtitle: textVariant?.subtitle || activeSlide.subtitle,
-      screenshotDataUrl: screenshotVariant ?? activeSlide.screenshotDataUrl,
-    }
-  }, [activeSlide, activeLanguage])
+  const displaySlide = useMemo(
+    () => activeSlide && resolveSlideForLanguage(activeSlide, activeLanguage),
+    [activeSlide, activeLanguage]
+  )
+  const activeIndex = slides.findIndex((s) => s.id === activeSlideId)
+  // A spanning pair is previewed side by side so the seam can be lined up
+  const previewSlides = useMemo(() => {
+    // activeSlideId can briefly point at no slide (e.g. while rehydrating)
+    if (activeIndex < 0) return []
+    const left = spansNext(slides, activeIndex) ? activeIndex : spanSource(slides, activeIndex) ? activeIndex - 1 : -1
+    const indices = left >= 0 ? [left, left + 1] : [activeIndex]
+    return indices.map((i) => {
+      const src = spanSource(slides, i)
+      return {
+        slide: resolveSlideForLanguage(slides[i], activeLanguage),
+        spanFrom: src && resolveSlideForLanguage(src, activeLanguage),
+        spanning: spansNext(slides, i),
+      }
+    })
+  }, [slides, activeIndex, activeLanguage])
 
   // Apply dark class to <html> whenever theme changes
   useEffect(() => {
@@ -226,8 +247,9 @@ export default function App() {
     const idx = slides.findIndex((s) => s.id === activeSlideId)
     const lang = activeLanguage
     flushSync(() => setExportLanguage(lang))
-    const suffix = lang === 'en' ? '' : `-${lang}`
-    await exportSlide(el, activeSlide.format, `slide-${idx + 1}${suffix}`)
+    // Same per-format number as the ZIP export, so a slide has one name either way
+    const n = slides.slice(0, idx + 1).filter((s) => s.format === activeSlide.format).length
+    await exportSlide(el, activeSlide.format, `${lang}-slide-${String(n).padStart(2, '0')}`)
     flushSync(() => setExportLanguage('en'))
   }, [activeSlide, activeSlideId, slides, activeLanguage])
 
@@ -246,7 +268,9 @@ export default function App() {
 
   const dims = activeSlide ? FORMAT_DIMS[activeSlide.format] : { W: 1080, H: 1920 }
   const maxScale = activeSlide ? previewScale(activeSlide.format) : 1
-  const fitScale = containerW > 0 ? Math.min(maxScale, (containerW - 48) / dims.W) : maxScale
+  const PAIR_GAP = 8
+  const previewW = dims.W * previewSlides.length
+  const fitScale = containerW > 0 ? Math.min(maxScale, (containerW - 48 - PAIR_GAP * (previewSlides.length - 1)) / previewW) : maxScale
   const scale = fitScale
   const displayW = Math.round(dims.W * scale)
   const displayH = Math.round(dims.H * scale)
@@ -268,25 +292,52 @@ export default function App() {
                 onAdd={() => setShowAddLang(true)}
               />
 
-              <div
-                style={{
-                  width: displayW,
-                  height: displayH,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  borderRadius: 10,
-                  boxShadow: isDark
-                    ? '0 8px 48px rgba(0,0,0,0.6)'
-                    : '0 8px 48px rgba(0,0,0,0.15)',
-                  flexShrink: 0,
-                }}
-              >
-                <SlideCanvas slide={displaySlide} scale={scale} />
+              <div className="flex" style={{ gap: PAIR_GAP }}>
+                {previewSlides.map(({ slide, spanFrom, spanning }) => {
+                  const isActive = slide.id === activeSlideId
+                  return (
+                    <div
+                      key={slide.id}
+                      onClick={isActive ? undefined : () => setActiveSlide(slide.id)}
+                      {...(!isActive && {
+                        role: 'button',
+                        tabIndex: 0,
+                        'aria-label': t('canvas.select_slide', { n: slides.findIndex((s) => s.id === slide.id) + 1 }),
+                        onKeyDown: (e: React.KeyboardEvent) => {
+                          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveSlide(slide.id) }
+                        },
+                      })}
+                      style={{
+                        width: displayW,
+                        height: displayH,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: 10,
+                        boxShadow: isDark
+                          ? '0 8px 48px rgba(0,0,0,0.6)'
+                          : '0 8px 48px rgba(0,0,0,0.15)',
+                        flexShrink: 0,
+                        cursor: isActive ? undefined : 'pointer',
+                        outline: previewSlides.length > 1 && isActive ? '2px solid rgb(129 140 248)' : undefined,
+                        outlineOffset: 2,
+                      }}
+                    >
+                      <SlideCanvas
+                        slide={slide}
+                        scale={scale}
+                        interactive={isActive}
+                        spanFrom={spanFrom}
+                        spanning={spanning}
+                        hintLanguage={activeLanguage}
+                      />
+                    </div>
+                  )
+                })}
               </div>
 
               <div className="flex flex-col items-center gap-1">
                 <div className="flex flex-wrap justify-center gap-2">
-                  {activeSlide && <ReplaceButton slideId={activeSlide.id} />}
+                  {activeSlide && !spanSource(slides, activeIndex) && <ReplaceButton slideId={activeSlide.id} />}
                   {activeSlide && activeLanguage !== 'en' && activeSlide.screenshotVariants?.[activeLanguage] && (
                     <button
                       onClick={async () => {
@@ -327,11 +378,7 @@ export default function App() {
       <HiddenExportCanvases canvasRefs={canvasRefs} exportLanguage={exportLanguage} />
 
       {pendingDelete && (
-        <ConfirmDialog
-          message="Remove this slide? This can't be undone."
-          onConfirm={() => { removeSlide(pendingDelete); setPendingDelete(null) }}
-          onCancel={() => setPendingDelete(null)}
-        />
+        <SlideDeleteDialog slideId={pendingDelete} onClose={() => setPendingDelete(null)} />
       )}
 
       {showAddLang && <AddLanguageDialog onClose={() => setShowAddLang(false)} />}

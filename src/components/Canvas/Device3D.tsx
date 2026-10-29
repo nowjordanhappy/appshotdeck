@@ -15,15 +15,18 @@ function parseColor(css: string): [string, number] {
 // (post-CSS-transform) size. resize={{ offsetSize: true }} fixes the initial
 // measurement, but this guard catches any subsequent drift.
 
-function SizeEnforcer({ w, h }: { w: number; h: number }) {
+function SizeEnforcer({ w, h, fov }: { w: number; h: number; fov: number }) {
   const { gl, camera } = useThree()
   useFrame(() => {
     const el  = gl.domElement
     const dpr = gl.getPixelRatio()
-    if (el.width !== Math.round(w * dpr) || el.height !== Math.round(h * dpr)) {
+    // fov is checked too: the Canvas camera prop is only applied at mount
+    const fovChanged = camera instanceof THREE.PerspectiveCamera && camera.fov !== fov
+    if (el.width !== Math.round(w * dpr) || el.height !== Math.round(h * dpr) || fovChanged) {
       gl.setSize(w, h, true)
       if (camera instanceof THREE.PerspectiveCamera) {
         camera.aspect = w / h
+        camera.fov = fov
         camera.updateProjectionMatrix()
       }
     }
@@ -151,10 +154,12 @@ interface Props {
   slotH:  number
   vbW:    number
   tilt:   number
+  /** In-plane rotation in degrees (clockwise on screen, like CSS rotate). */
+  rotate?: number
   screenshotDataUrl: string | null
 }
 
-export function Device3D({ spec, slotW, slotH, vbW, tilt, screenshotDataUrl }: Props) {
+export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate = 0, screenshotDataUrl }: Props) {
   const aspect       = slotH / slotW
   const bezelN       = (spec.bezelWidth * (slotW / vbW)) / slotW
   const outerCornerR = spec.outerRx / vbW   // model units — matches android-flat outerRx
@@ -168,16 +173,29 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, screenshotDataUrl }: P
   const zExcursion = 0.5 * Math.sin(maxTiltRad) + (modelDepth / 2 + modelBevel) * Math.cos(maxTiltRad)
   const cameraZ    = (aspect / 2) / Math.tan((fov / 2) * (Math.PI / 180)) + zExcursion + 0.05
 
+  // Rotated: grow the canvas to the rotated slot's bounding box (centered on the slot) and
+  // widen the FOV by the same ratio, keeping the camera distance — the device keeps its exact
+  // pixel size and perspective. rotate = 0 takes the original path untouched.
+  const rad     = THREE.MathUtils.degToRad(rotate)
+  const canvasW = rotate ? Math.round(slotW * Math.abs(Math.cos(rad)) + slotH * Math.abs(Math.sin(rad))) : slotW
+  const canvasH = rotate ? Math.round(slotW * Math.abs(Math.sin(rad)) + slotH * Math.abs(Math.cos(rad))) : slotH
+  const canvasFov = rotate
+    ? 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(THREE.MathUtils.degToRad(fov / 2)) * canvasH / slotH))
+    : fov
+  const canvasStyle = rotate
+    ? { position: 'absolute' as const, left: (slotW - canvasW) / 2, top: (slotH - canvasH) / 2, width: canvasW, height: canvasH }
+    : { position: 'absolute' as const, inset: 0 }
+
   return (
     <Canvas
-      style={{ position: 'absolute', inset: 0, filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.75))' }}
-      camera={{ position: [0, 0, cameraZ], fov, near: 0.01, far: 100 }}
+      style={{ ...canvasStyle, filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.75))' }}
+      camera={{ position: [0, 0, cameraZ], fov: canvasFov, near: 0.01, far: 100 }}
       gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
       flat
       dpr={window.devicePixelRatio}
       resize={{ offsetSize: true }}
     >
-      <SizeEnforcer w={slotW} h={slotH} />
+      <SizeEnforcer w={canvasW} h={canvasH} fov={canvasFov} />
 
       {/* Ambient base so body is never pure black */}
       <ambientLight intensity={0.4} />
@@ -186,14 +204,17 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, screenshotDataUrl }: P
       {/* Fill: lower-left-front, soft */}
       <directionalLight position={[-3, -2, 4]} intensity={0.6} />
 
-      <PhoneModel
-        spec={spec}
-        aspect={aspect}
-        bezelN={bezelN}
-        outerCornerR={outerCornerR}
-        tilt={tilt}
-        screenshotDataUrl={screenshotDataUrl}
-      />
+      {/* Outer group: in-plane rotation must apply after the tilt, not inside its Euler */}
+      <group rotation={[0, 0, -rad]}>
+        <PhoneModel
+          spec={spec}
+          aspect={aspect}
+          bezelN={bezelN}
+          outerCornerR={outerCornerR}
+          tilt={tilt}
+          screenshotDataUrl={screenshotDataUrl}
+        />
+      </group>
     </Canvas>
   )
 }

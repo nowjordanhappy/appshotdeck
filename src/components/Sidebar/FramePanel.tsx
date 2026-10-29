@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical } from 'lucide-react'
+import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical, Link2 } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
 import { Tooltip } from '../Tooltip'
+import { spanSource } from '../../utils/span'
+import { deviceLayout } from '../../utils/layout'
+import type { Slide } from '../../types'
+import { ConfirmDialog } from '../ConfirmDialog'
 
 const RESIZABLE_FORMATS = new Set(['phone', 'iphone-69', 'iphone-65', 'ipad-13', 'tablet-7', 'tablet-10'])
 const LANDSCAPE_FORMATS = new Set(['tablet-7', 'tablet-10'])
@@ -14,14 +19,67 @@ const DEFAULT_OFFSET: Record<string, number> = {
 }
 
 
+// Live diagram of the span: the real device layout (same math as the canvas) scaled down onto
+// two slide outlines. Faded while span is off, as an explanation of what the option does.
+function SpanPreview({ slide, active }: { slide: Slide; active: boolean }) {
+  // While off, show where the device would go by default (centered on the seam)
+  const l = deviceLayout(active ? slide : { ...slide, spanX: 100 }, undefined, true)
+  const k = 40 / Math.min(l.W, l.H) * (l.landscape ? 1.6 : 1)
+  const sw = l.W * k, sh = l.H * k
+  const dw = l.dSlotW * k * (l.frame.device3d ? Math.cos(slide.frameTilt * Math.PI / 180) : 1)
+  const dh = l.dSlotH * k
+  const cx = 4 + (l.slotX + l.dSlotW / 2) * k, cy = 4 + (l.slotY + l.dSlotH / 2) * k
+  return (
+    <svg viewBox={`0 0 ${sw * 2 + 8} ${sh + 8}`} className={`w-full max-h-28 ${active ? '' : 'opacity-40'}`} aria-hidden>
+      <defs><clipPath id="span-preview-clip"><rect x="4" y="4" width={sw * 2} height={sh} rx="3" /></clipPath></defs>
+      <rect x="4" y="4" width={sw} height={sh} rx="3" className="fill-indigo-500/10 stroke-current" strokeOpacity="0.3" />
+      <rect x={4 + sw} y="4" width={sw} height={sh} rx="3" className="fill-indigo-500/10 stroke-current" strokeOpacity="0.3" />
+      <g clipPath="url(#span-preview-clip)">
+        <g transform={`translate(${cx} ${cy}) rotate(${l.rotate})`}>
+          <rect x={-dw / 2} y={-dh / 2} width={dw} height={dh} rx={dw * 0.12} className="fill-current" fillOpacity="0.85" />
+          <rect x={-dw / 2 + 1.5} y={-dh / 2 + 1.5} width={dw - 3} height={dh - 3} rx={dw * 0.1} className="fill-indigo-400" />
+        </g>
+      </g>
+      <line x1={4 + sw} y1="1" x2={4 + sw} y2={sh + 7} className="stroke-indigo-400" strokeDasharray="2 2" />
+    </svg>
+  )
+}
+
 export function FramePanel() {
   const { t } = useTranslation()
-  const { slides, activeSlideId, updateSlide } = useEditorStore()
-  const slide = slides.find((s) => s.id === activeSlideId)
+  const { slides, activeSlideId, updateSlide, setActiveSlide, insertSpanSlide } = useEditorStore()
+  const [confirmInsert, setConfirmInsert] = useState(false)
+  const index = slides.findIndex((s) => s.id === activeSlideId)
+  const slide = slides[index]
   if (!slide) return null
 
   const available = framesForFormat(slide.format)
   const activeFrame = frameById(slide.frame)
+  const receivingFrom = spanSource(slides, index)
+  const next = slides[index + 1]
+  const canSpan = !!next && next.format === slide.format
+  // Spanning hides the next slide's own device, so ask before hiding real content
+  const spanning = canSpan && (slide.spanNext ?? false)
+  const nextHasDevice = canSpan && (!!next.screenshotDataUrl || (next.callouts?.length ?? 0) > 0)
+
+  // The device on a receiving slide belongs to the previous slide; edit it there
+  if (receivingFrom) {
+    return (
+      <div className="p-4 space-y-3">
+        <p className="text-xs text-muted uppercase tracking-wider mb-3">{t('frame.title')}</p>
+        <div className="flex items-start gap-2 px-3 py-3 rounded-xl option-idle text-sm">
+          <Link2 size={16} className="flex-shrink-0 mt-0.5 text-indigo-400" />
+          <span>{t('frame.span_received', { n: index })}</span>
+        </div>
+        <button
+          onClick={() => setActiveSlide(receivingFrom.id)}
+          className="w-full px-4 py-2 text-sm btn-ghost text-indigo-400"
+        >
+          {t('frame.span_edit', { n: index })}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 space-y-2">
@@ -58,12 +116,12 @@ export function FramePanel() {
               {t('frame.pos')} <Tooltip text={t('tips.pos')} />
             </span>
             <input
-              type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
+              aria-label={t('frame.pos')} type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
               onChange={(e) => updateSlide(activeSlideId, { deviceOffset: Number(e.target.value) })}
               className="flex-1 min-w-0"
             />
             <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{(slide.deviceOffset ?? 0) > 0 ? `+${slide.deviceOffset}` : (slide.deviceOffset ?? 0)}%</span>
-            {PORTRAIT_PHONE_FORMATS.has(slide.format) && (
+            {(PORTRAIT_PHONE_FORMATS.has(slide.format) || spanning) && (
               <button
                 onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
                 className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
@@ -72,7 +130,7 @@ export function FramePanel() {
                 <AlignCenterVertical size={14} />
               </button>
             )}
-            {LANDSCAPE_FORMATS.has(slide.format) && (
+            {LANDSCAPE_FORMATS.has(slide.format) && !spanning && (
               <button
                 onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
                 className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
@@ -94,7 +152,7 @@ export function FramePanel() {
               {t('frame.size')} <Tooltip text={t('tips.size')} />
             </span>
             <input
-              type="range" min={60} max={LANDSCAPE_FORMATS.has(slide.format) || slide.format === 'ipad-13' ? 180 : 150} value={slide.deviceScale ?? 100}
+              aria-label={t('frame.size')} type="range" min={60} max={LANDSCAPE_FORMATS.has(slide.format) || slide.format === 'ipad-13' ? 180 : 150} value={slide.deviceScale ?? 100}
               onChange={(e) => updateSlide(activeSlideId, { deviceScale: Number(e.target.value) })}
               className="flex-1 min-w-0"
             />
@@ -110,13 +168,32 @@ export function FramePanel() {
         </>
       )}
 
+      <div className="flex items-center gap-2 pt-2 pr-1">
+        <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
+          {t('frame.rotate')} <Tooltip text={t('tips.rotate')} />
+        </span>
+        <input
+          aria-label={t('frame.rotate')} type="range" min={-40} max={40} value={slide.deviceRotate ?? 0}
+          onChange={(e) => updateSlide(activeSlideId, { deviceRotate: Number(e.target.value) })}
+          className="flex-1 min-w-0"
+        />
+        <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.deviceRotate ?? 0}°</span>
+        <button
+          onClick={() => updateSlide(activeSlideId, { deviceRotate: 0 })}
+          className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+          title={t('frame.reset_rotate')}
+        >
+          <RotateCcw size={14} />
+        </button>
+      </div>
+
       {activeFrame.tilt && (
         <div className="flex items-center gap-2 pt-2 pr-1">
           <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
             {t('frame.tilt')} <Tooltip text={t('tips.tilt')} />
           </span>
           <input
-            type="range" min={-60} max={60} value={slide.frameTilt}
+            aria-label={t('frame.tilt')} type="range" min={-60} max={60} value={slide.frameTilt}
             onChange={(e) => updateSlide(activeSlideId, { frameTilt: Number(e.target.value) })}
             className="flex-1 min-w-0"
           />
@@ -130,6 +207,75 @@ export function FramePanel() {
           </button>
         </div>
       )}
+
+      <div className="pt-3 mt-2 border-t border-gray-200 dark:border-white/10 space-y-2">
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={canSpan && (slide.spanNext ?? false)}
+            onChange={(e) => {
+              // No same-format slide to continue into → offer to insert one instead of refusing
+              // Always ask: even an empty next slide may have its own text and background
+              if (e.target.checked) setConfirmInsert(true)
+              else updateSlide(activeSlideId, { spanNext: e.target.checked })
+            }}
+          />
+          {t('frame.span_next')}
+          <Tooltip text={t('tips.span')} side="top-end" />
+        </label>
+        <SpanPreview slide={slide} active={spanning} />
+        {confirmInsert && (
+          <ConfirmDialog
+            message={
+              nextHasDevice ? t('frame.span_use_or_insert', { n: index + 2 })
+                : canSpan ? t('frame.span_use_or_insert_empty', { n: index + 2 })
+                : next ? t('frame.span_insert_mismatch', { n: index + 2 })
+                : t('frame.span_insert_new')
+            }
+            confirmLabel={t('frame.span_insert_confirm')}
+            tone="primary"
+            secondaryLabel={canSpan ? t('frame.span_use_next', { n: index + 2 }) : undefined}
+            onSecondary={() => { updateSlide(activeSlideId, { spanNext: true }); setConfirmInsert(false) }}
+            onConfirm={() => { insertSpanSlide(activeSlideId); setConfirmInsert(false) }}
+            onCancel={() => {
+              // The checkbox showed unchecked; don't leave a hidden flag that revives later
+              if (slide.spanNext) updateSlide(activeSlideId, { spanNext: false })
+              setConfirmInsert(false)
+            }}
+          />
+        )}
+        {canSpan && slide.spanNext && (
+          <>
+            <div className="flex items-center gap-2 pr-1">
+              <span className="flex items-center gap-1 text-xs text-muted flex-shrink-0">
+                {t('frame.span_x')} <Tooltip text={t('tips.span_x')} />
+              </span>
+              <input
+                aria-label={t('frame.span_x_label')} type="range" min={50} max={150} value={slide.spanX ?? 100}
+                onChange={(e) => updateSlide(activeSlideId, { spanX: Number(e.target.value) })}
+                className="flex-1 min-w-0"
+              />
+              <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.spanX ?? 100}</span>
+              <button
+                onClick={() => updateSlide(activeSlideId, { spanX: 100 })}
+                className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+                title={t('frame.span_x_reset')}
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={slide.spanBackground ?? false}
+                onChange={(e) => updateSlide(activeSlideId, { spanBackground: e.target.checked })}
+              />
+              {t('frame.span_bg')}
+              <Tooltip text={t('tips.span_bg')} side="top-end" />
+            </label>
+          </>
+        )}
+      </div>
     </div>
   )
 }

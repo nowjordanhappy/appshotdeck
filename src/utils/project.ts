@@ -1,7 +1,21 @@
 import JSZip from 'jszip'
 import type { Slide } from '../types'
 
-const PROJECT_VERSION = 2
+// New slides used to be created with this English copy saved as real text, so it exported
+// and never followed the language. New slides start empty; clear exact leftovers on load.
+const LEGACY_HEADLINE = 'Your App Headline'
+const LEGACY_SUBTITLE = 'Short supporting description'
+
+export function clearLegacyPlaceholders<T extends Pick<Slide, 'headline' | 'subtitle'>>(slide: T): T {
+  if (slide.headline !== LEGACY_HEADLINE && slide.subtitle !== LEGACY_SUBTITLE) return slide
+  return {
+    ...slide,
+    headline: slide.headline === LEGACY_HEADLINE ? '' : slide.headline,
+    subtitle: slide.subtitle === LEGACY_SUBTITLE ? '' : slide.subtitle,
+  }
+}
+
+const PROJECT_VERSION = 3
 
 function extractBase64(dataUrl: string): string | null {
   const parts = dataUrl.split(',')
@@ -87,7 +101,7 @@ export interface LoadedProject {
 }
 
 export async function loadProject(file: File): Promise<LoadedProject> {
-  const zip = await JSZip.loadAsync(file)
+  const zip = await JSZip.loadAsync(await file.arrayBuffer())
 
   const configFile = zip.file('config.json')
   if (!configFile) throw new Error('Invalid project file: missing config.json')
@@ -121,7 +135,7 @@ export async function loadProject(file: File): Promise<LoadedProject> {
       }
 
       return {
-        ...rest,
+        ...clearLegacyPlaceholders(rest),
         screenshotDataUrl,
         ...(Object.keys(screenshotVariants).length ? { screenshotVariants } : {}),
       } as Slide
