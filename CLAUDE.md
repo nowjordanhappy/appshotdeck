@@ -13,7 +13,7 @@ npm run lint      # eslint
 npm test          # vitest (unit tests, src/**/*.test.ts)
 ```
 
-CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test` and `npm run build` on every PR and push to `main`. Lint is not in CI yet (existing eslint errors on `main`). Docs-only changes (`**.md`, `docs/**`) skip CI, a newer push cancels the running one, and the job times out after 10 min. The repo is public (Actions minutes are free) and no artifacts are uploaded — add `retention-days` if that ever changes.
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test` and `npm run build` on every PR and push to `main`; on `main` a `deploy` job then publishes `dist/` to GitHub Pages — the live demo at https://nowjordanhappy.github.io/appshotdeck/ (Vite `base: './'` so the same build works locally and under `/appshotdeck/`). Only PR runs are cancelled by newer pushes; a deploy on `main` always finishes. Lint is not in CI yet (existing eslint errors on `main`). Docs-only changes (`**.md`, `docs/**`) skip CI, a newer push cancels the running one, and the job times out after 10 min. The repo is public (Actions minutes are free) and no artifacts are uploaded — add `retention-days` if that ever changes.
 
 ## Key architecture
 

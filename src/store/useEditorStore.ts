@@ -329,10 +329,15 @@ export const useEditorStore = create<EditorState>()(
       }),
       onRehydrateStorage: () => async (state) => {
         if (!state) return
+        // localStorage hydration runs synchronously inside create(), before useEditorStore is
+        // assigned; wait a tick so the setState calls below can't hit it uninitialized.
+        await Promise.resolve()
 
-        // Migration from v1 (slides at top level, no projects)
+        // Migration from v1 (slides at top level, no projects). The callback gets the stored
+        // data merged into the initial state, so empty storage also looks like "slides, no _v":
+        // only the fresh initial slide tells the two apart.
         const raw = state as unknown as Record<string, unknown>
-        const isOldFormat = !raw._v && Array.isArray(raw.slides)
+        const isOldFormat = !raw._v && Array.isArray(raw.slides) && (raw.slides as Slide[])[0]?.id !== _initSlide.id
         if (isOldFormat) {
           const oldSlides = raw.slides as Slide[]
           const projectId = _initProject.id

@@ -7,10 +7,10 @@ on:
     branches: [main]
     paths-ignore: ['**.md', 'docs/**']
 
-# A newer push to the same branch/PR makes the older run pointless
+# A newer push to a PR makes the older run pointless; on main a deploy is never cut off
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -27,4 +27,25 @@ jobs:
       # tsc -b + vite build: catches type errors too
       - run: npm run build
       # Lint is left out until the 7 existing eslint errors on main are fixed
-      # No artifacts are uploaded; if that changes, set retention-days (Actions storage is the tight budget)
+      # Only main publishes the demo; the artifact is kept 1 day (repo is public, so it's free anyway)
+      - if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+          retention-days: 1
+
+  # Live demo on GitHub Pages, only after tests and build passed on main
+  deploy:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
