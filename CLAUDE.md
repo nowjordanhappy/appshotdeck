@@ -13,6 +13,8 @@ npm run lint      # eslint
 npm test          # vitest (unit tests, src/**/*.test.ts)
 ```
 
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test` and `npm run build` on every PR and push to `main`. Lint is not in CI yet (existing eslint errors on `main`).
+
 ## Key architecture
 
 ### Frame system (`src/data/frames.ts`)
