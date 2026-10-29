@@ -4,6 +4,8 @@
 
 A local, browser-only tool for composing Play Store and App Store marketing screenshots. Upload an app screenshot, wrap it in a device frame, add a headline and subtitle, set a background, and export at store-spec resolution — no server, no cloud, no account required.
 
+**[Try the demo →](https://nowjordanhappy.github.io/appshotdeck/)** No install needed. Everything runs in your browser and your projects stay on your device. The only thing sent anywhere is text you choose to auto-translate, which goes to MyMemory. To run it locally instead, see [Getting Started](#getting-started).
+
 ## Demo
 
 ![3D frame demo](docs/demo-3d.gif)
