@@ -1,3 +1,4 @@
+import { useEffect, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface Props {
@@ -14,13 +15,28 @@ interface Props {
 
 export function ConfirmDialog({ message, onConfirm, onCancel, confirmLabel, tone = 'danger', secondaryLabel, onSecondary }: Props) {
   const { t } = useTranslation()
+  const messageId = useId()
+
+  // Escape cancels, like clicking the backdrop
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-      <div className="relative surface border border-subtle rounded-xl shadow-2xl p-6 ${secondaryLabel ? 'w-96' : 'w-80'} flex flex-col gap-4">
-        <p className="text-sm text-gray-900 dark:text-white">{message}</p>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-describedby={messageId}
+        className={`relative surface border border-subtle rounded-xl shadow-2xl p-6 ${secondaryLabel ? 'w-96' : 'w-80'} flex flex-col gap-4`}
+      >
+        <p id={messageId} className="text-sm text-gray-900 dark:text-white">{message}</p>
         <div className="flex gap-2 justify-end">
           <button
+            autoFocus
             onClick={onCancel}
             className="px-4 py-2 text-sm rounded-lg border border-subtle text-muted hover:text-foreground transition-colors"
           >

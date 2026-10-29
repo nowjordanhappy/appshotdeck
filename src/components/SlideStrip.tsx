@@ -120,6 +120,8 @@ export function SlideStrip() {
 
             {spansNext(slides, idx) && (
               <span
+                role="img"
+                aria-label={t('strip.span_link', { a: idx + 1, b: idx + 2 })}
                 title={t('strip.span_link', { a: idx + 1, b: idx + 2 })}
                 className="absolute top-1/2 -right-[14px] -translate-y-1/2 z-10 w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center pointer-events-auto"
               >

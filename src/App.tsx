@@ -299,6 +299,14 @@ export default function App() {
                     <div
                       key={slide.id}
                       onClick={isActive ? undefined : () => setActiveSlide(slide.id)}
+                      {...(!isActive && {
+                        role: 'button',
+                        tabIndex: 0,
+                        'aria-label': t('canvas.select_slide', { n: slides.findIndex((s) => s.id === slide.id) + 1 }),
+                        onKeyDown: (e: React.KeyboardEvent) => {
+                          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveSlide(slide.id) }
+                        },
+                      })}
                       style={{
                         width: displayW,
                         height: displayH,

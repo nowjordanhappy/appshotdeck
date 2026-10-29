@@ -14,14 +14,35 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 |---|---|
 | ![Phone](docs/screenshot-phone.png) | ![Tablet](docs/screenshot-tablet.png) |
 
+| Device across two slides — phone | Device across two slides — tablet |
+|---|---|
+| ![A rotated, tilted 3D phone spanning two slides](docs/screenshot-span-phone.png) | ![A tablet spanning two slides](docs/screenshot-span-tablet.png) |
+| Rotated, tilted 3D phone across the seam, shared background | Tablet centered on the seam, text mirrored on the second slide |
+
+| Translations | Zoom callouts |
+|---|---|
+| ![Slides previewed in Spanish](docs/screenshot-translations.png) | ![A zoom callout over the device](docs/screenshot-callouts.png) |
+| Preview any language: text and per-language screenshots switch together | Drag on the screenshot to magnify a detail |
+
 ![Light theme](docs/screenshot-light.png)
+
+## Made with AppShotDeck
+
+Store screenshots for these apps on Google Play were made with AppShotDeck:
+
+- [Verbum](https://play.google.com/store/apps/details?id=com.nowjordanhappy.verbum): the daily Gospel, a reflection, the Rosary and the liturgical year
+- [Penumbra](https://play.google.com/store/apps/details?id=com.nowjordanhappy.penumbra): a screen dimmer that goes below the system's minimum brightness
+- [Strux](https://play.google.com/store/apps/details?id=com.nowjordanhappy.strux): a viewer for BIM models in IFC files
+- [Upcoming Alarm](https://play.google.com/store/apps/details?id=com.nowjordanhappy.upcomingalarm): a home screen widget that shows your next alarm
+- [Parallax](https://play.google.com/store/apps/details?id=com.nowjordanhappy.parallax): a remote control for LG webOS smart TVs over Wi-Fi
 
 ## Features
 
 - **Multi-format support** — Phone, Tablet 7", Tablet 10", iPhone 6.9", iPhone 6.5", iPad 13"
 - **Device frames** — Minimal, Android flat, Android 3D, iPhone flat, iPhone 3D, Android Tab, iPad
 - **3D frames** — Real-time WebGL rendering via Three.js with adjustable tilt angle
-- **Device controls** — Per-slide position (vertical/horizontal), size scale, and one-click canvas centering
+- **Device controls** — Per-slide position (vertical/horizontal), size scale, in-plane rotation (±40°, flat and 3D frames), and one-click canvas centering
+- **Device across two slides** — One phone or tablet runs across the seam of two adjacent slides, like a panorama in the store. Turn on *Span into next slide* in the Frame tab, slide it across the seam with X, rotate it, and optionally share one background across both slides. A live mini-preview shows what the option does. Pairs move together when reordering, and deleting one asks whether to remove both
 - **Background system** — Dark gradients, light gradients, solid presets, custom color/gradient picker with angle control
 - **Text panel** — Headline + subtitle each with independent font family, font weight, font size, color, and show/hide toggle
 - **Typography** — 5 bundled fonts (Inter, Poppins, Montserrat, Nunito, Space Grotesk), 4 weights (Light/Regular/SemiBold/Bold), 60–140% size scale
@@ -34,12 +55,13 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Workspace save/load** — Save All / Load All exports every project into one workspace ZIP; conflict dialog on import (skip or replace existing)
 - **Slide translations** — Add languages to a project (auto-translated via MyMemory or filled manually); preview each language above the canvas; protected words keep brand names untranslated; export per language or all at once
 - **Per-language screenshots** — Upload custom screenshots for each language variant (e.g., English app screenshot vs Spanish app screenshot); Replace button below canvas makes it easy to swap screenshots for the active language without switching tabs; drag-and-drop or click on the thumbnail in the Upload tab to replace; "Use default" button reverts to the EN screenshot
-- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages in a single ZIP with per-language folders (`en/…`, `es/…`); each language variant exports its own custom screenshot if available. Files are named per format and zero-padded (`slide-01`, `slide-02`, …) so store uploads stay in order
+- **Export Slides** — Single PNG or all slides as a ZIP; when translations are added, export per language (one ZIP each) or all languages in a single ZIP with per-language folders (`en/…`, `es/…`); each language variant exports its own custom screenshot if available. Files are prefixed with their language and numbered per format, zero-padded (`en-slide-01`, `es-slide-02`, …) so store uploads stay in order and languages never mix up
 - **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports; zoom callouts are re-composited on top so lenses stay above the 3D device
 - **Keyboard shortcuts** — `←/→` navigate slides, `Cmd+D` duplicate, `Delete` remove (with confirmation)
 - **Zoom callouts** — Drag a rectangle on the screenshot to create a magnified zoom bubble; drag the bubble anywhere on the canvas to reposition; up to 3 per slide; circle or rect shape; exports with the slide PNG
 - **Contextual tooltips** — `ⓘ` hints on non-obvious controls (Pos, Size, Tilt, Apply to all)
-- **Help panel** — Slide-in panel with getting started guide, keyboard shortcuts, and pro tips
+- **Help panel** — Slide-in panel with getting started guide, keyboard shortcuts, callouts, translations, per-language screenshots, device across two slides, and pro tips
+- **Placeholder text** — New slides start empty; the editor shows a faded hint in the selected language that is never saved or exported
 - **Toast notifications** — Non-blocking error and success feedback (replaces browser alert dialogs)
 - **Confirmation dialogs** — Styled modals for slide and project deletion
 - **Persistent** — Slide configs in localStorage (Zustand persist), screenshots in IndexedDB
@@ -81,6 +103,8 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173).
+
+Run the unit tests with `npm test`.
 
 ## Project Structure
 

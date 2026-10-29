@@ -101,6 +101,19 @@ export function HelpPanel({ onClose }: Props) {
 
           <div className="border-t border-subtle" />
 
+          {/* Spanning device */}
+          <section className="space-y-2">
+            <p className="text-xs text-muted uppercase tracking-wider">{t('help.span_title')}</p>
+            <ol className="space-y-1.5 list-decimal list-inside text-dim leading-snug">
+              <li>{t('help.span_1')}</li>
+              <li>{t('help.span_2')}</li>
+              <li>{t('help.span_3')}</li>
+              <li>{t('help.span_4')}</li>
+            </ol>
+          </section>
+
+          <div className="border-t border-subtle" />
+
           {/* Pro tips */}
           <section className="space-y-2">
             <p className="text-xs text-muted uppercase tracking-wider">{t('help.tips_title')}</p>
@@ -109,7 +122,6 @@ export function HelpPanel({ onClose }: Props) {
                 t('help.tip_apply'),
                 t('help.tip_save_all'),
                 t('help.tip_tilt'),
-                t('help.tip_span'),
                 t('help.tip_slides'),
               ].map((tip) => (
                 <li key={tip} className="flex gap-2 text-dim leading-snug">

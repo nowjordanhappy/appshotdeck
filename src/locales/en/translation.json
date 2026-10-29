@@ -95,7 +95,8 @@
     "span_insert_confirm": "Add slide",
     "span_use_or_insert": "Slide {{n}} already has its own screenshot or callouts. Use slide {{n}} (its device is hidden, not deleted — it comes back if you turn span off) or insert a new slide after this one?",
     "span_use_or_insert_empty": "Continue the device into slide {{n}}, or insert a new slide after this one?",
-    "span_use_next": "Use slide {{n}}"
+    "span_use_next": "Use slide {{n}}",
+    "span_x_label": "Span horizontal position"
   },
   "background": {
     "gradients": "Gradients",
@@ -144,7 +145,8 @@
   "canvas": {
     "upload_prompt": "Upload Screenshot",
     "headline_hint": "Your headline",
-    "subtitle_hint": "A short supporting line"
+    "subtitle_hint": "A short supporting line",
+    "select_slide": "Select slide {{n}}"
   },
   "export": {
     "slide": "Export this slide PNG"
@@ -181,7 +183,6 @@
     "tip_apply": "Use Apply to all in the Background and Text panels to sync a style across every slide at once.",
     "tip_save_all": "Save All Projects backs up your entire workspace — handy before switching devices.",
     "tip_tilt": "3D frames have a Tilt slider in the Frame tab. Drag it to add perspective depth.",
-    "tip_span": "Turn on Span into next slide in the Frame tab to run one phone across two slides, like a panorama in the store.",
     "tip_slides": "Each project supports up to 8 slides, each with its own format, frame, and background.",
     "translate_title": "Slide Translations",
     "translate_1": "Open the Text tab and expand Translations",
@@ -197,7 +198,12 @@
     "screenshots_title": "Per-language Screenshots",
     "screenshots_1": "After adding translations, use the Replace button below the canvas to upload language-specific screenshots",
     "screenshots_2": "The language label below the buttons shows which variant you're replacing (e.g., ES · Español · Spanish)",
-    "screenshots_3": "Use 'Use default' to remove a custom screenshot and fall back to the EN default"
+    "screenshots_3": "Use 'Use default' to remove a custom screenshot and fall back to the EN default",
+    "span_title": "Device across two slides",
+    "span_1": "Add the screenshot to the first slide, then in the Frame tab turn on Span into next slide",
+    "span_2": "Choose to use the next slide or add a new one — its own device is hidden, not deleted",
+    "span_3": "Move X to slide the device across the seam; Rotate, Pos and Size work as usual",
+    "span_4": "Turn on Shared background so a gradient flows from one slide into the next"
   },
   "callout": {
     "add": "Add callout",

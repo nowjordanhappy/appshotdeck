@@ -95,7 +95,8 @@
     "span_insert_confirm": "Añadir diapositiva",
     "span_use_or_insert": "La diapositiva {{n}} ya tiene su propia captura o zooms. ¿Usar la diapositiva {{n}} (su dispositivo se oculta, no se borra; vuelve si desactivas la extensión) o insertar una nueva después de esta?",
     "span_use_or_insert_empty": "¿Continuar el dispositivo en la diapositiva {{n}} o insertar una nueva después de esta?",
-    "span_use_next": "Usar diapositiva {{n}}"
+    "span_use_next": "Usar diapositiva {{n}}",
+    "span_x_label": "Posición horizontal de la extensión"
   },
   "background": {
     "gradients": "Degradados",
@@ -144,7 +145,8 @@
   "canvas": {
     "upload_prompt": "Sube una captura",
     "headline_hint": "Tu titular",
-    "subtitle_hint": "Una línea breve de apoyo"
+    "subtitle_hint": "Una línea breve de apoyo",
+    "select_slide": "Seleccionar diapositiva {{n}}"
   },
   "export": {
     "slide": "Exportar esta captura PNG"
@@ -181,7 +183,6 @@
     "tip_apply": "Usa Aplicar a todas en los paneles de Fondo y Texto para sincronizar estilos en todas las diapositivas.",
     "tip_save_all": "Guardar todos los proyectos hace una copia de todo tu espacio de trabajo — útil antes de cambiar de dispositivo.",
     "tip_tilt": "Los marcos 3D tienen un control deslizante de Inclinación en la pestaña Marco. Arrástralo para añadir profundidad.",
-    "tip_span": "Activa Extender a la siguiente en la pestaña Marco para que un teléfono cruce dos diapositivas, como un panorama en la tienda.",
     "tip_slides": "Cada proyecto admite hasta 8 diapositivas, cada una con su propio formato, marco y fondo.",
     "translate_title": "Traducciones de diapositivas",
     "translate_1": "Abre la pestaña Texto y despliega Traducciones",
@@ -197,7 +198,12 @@
     "screenshots_title": "Capturas por idioma",
     "screenshots_1": "Después de agregar traducciones, usa el botón Reemplazar bajo el lienzo para subir capturas específicas del idioma",
     "screenshots_2": "La etiqueta de idioma bajo los botones muestra qué variante estás reemplazando (p.ej., ES · Español · Spanish)",
-    "screenshots_3": "Usa 'Usar predeterminado' para eliminar una captura personalizada y volver a la predeterminada EN"
+    "screenshots_3": "Usa 'Usar predeterminado' para eliminar una captura personalizada y volver a la predeterminada EN",
+    "span_title": "Dispositivo entre dos diapositivas",
+    "span_1": "Añade la captura a la primera diapositiva y, en la pestaña Marco, activa Extender a la siguiente",
+    "span_2": "Elige usar la diapositiva siguiente o añadir una nueva; su propio dispositivo se oculta, no se borra",
+    "span_3": "Mueve X para desplazar el dispositivo sobre la unión; Girar, Pos y Tamaño funcionan igual",
+    "span_4": "Activa Fondo compartido para que un degradado fluya de una diapositiva a la siguiente"
   },
   "callout": {
     "add": "Agregar callout",

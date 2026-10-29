@@ -5,6 +5,8 @@ import { useEditorStore } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
 import { Tooltip } from '../Tooltip'
 import { spanSource } from '../../utils/span'
+import { deviceLayout } from '../../utils/layout'
+import type { Slide } from '../../types'
 import { ConfirmDialog } from '../ConfirmDialog'
 
 const RESIZABLE_FORMATS = new Set(['phone', 'iphone-69', 'iphone-65', 'ipad-13', 'tablet-7', 'tablet-10'])
@@ -16,6 +18,32 @@ const DEFAULT_OFFSET: Record<string, number> = {
   'tablet-7': 16, 'tablet-10': 16,
 }
 
+
+// Live diagram of the span: the real device layout (same math as the canvas) scaled down onto
+// two slide outlines. Faded while span is off, as an explanation of what the option does.
+function SpanPreview({ slide, active }: { slide: Slide; active: boolean }) {
+  // While off, show where the device would go by default (centered on the seam)
+  const l = deviceLayout(active ? slide : { ...slide, spanX: 100 }, undefined, true)
+  const k = 40 / Math.min(l.W, l.H) * (l.landscape ? 1.6 : 1)
+  const sw = l.W * k, sh = l.H * k
+  const dw = l.dSlotW * k * (l.frame.device3d ? Math.cos(slide.frameTilt * Math.PI / 180) : 1)
+  const dh = l.dSlotH * k
+  const cx = 4 + (l.slotX + l.dSlotW / 2) * k, cy = 4 + (l.slotY + l.dSlotH / 2) * k
+  return (
+    <svg viewBox={`0 0 ${sw * 2 + 8} ${sh + 8}`} className={`w-full max-h-28 ${active ? '' : 'opacity-40'}`} aria-hidden>
+      <defs><clipPath id="span-preview-clip"><rect x="4" y="4" width={sw * 2} height={sh} rx="3" /></clipPath></defs>
+      <rect x="4" y="4" width={sw} height={sh} rx="3" className="fill-indigo-500/10 stroke-current" strokeOpacity="0.3" />
+      <rect x={4 + sw} y="4" width={sw} height={sh} rx="3" className="fill-indigo-500/10 stroke-current" strokeOpacity="0.3" />
+      <g clipPath="url(#span-preview-clip)">
+        <g transform={`translate(${cx} ${cy}) rotate(${l.rotate})`}>
+          <rect x={-dw / 2} y={-dh / 2} width={dw} height={dh} rx={dw * 0.12} className="fill-current" fillOpacity="0.85" />
+          <rect x={-dw / 2 + 1.5} y={-dh / 2 + 1.5} width={dw - 3} height={dh - 3} rx={dw * 0.1} className="fill-indigo-400" />
+        </g>
+      </g>
+      <line x1={4 + sw} y1="1" x2={4 + sw} y2={sh + 7} className="stroke-indigo-400" strokeDasharray="2 2" />
+    </svg>
+  )
+}
 
 export function FramePanel() {
   const { t } = useTranslation()
@@ -88,7 +116,7 @@ export function FramePanel() {
               {t('frame.pos')} <Tooltip text={t('tips.pos')} />
             </span>
             <input
-              type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
+              aria-label={t('frame.pos')} type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
               onChange={(e) => updateSlide(activeSlideId, { deviceOffset: Number(e.target.value) })}
               className="flex-1 min-w-0"
             />
@@ -124,7 +152,7 @@ export function FramePanel() {
               {t('frame.size')} <Tooltip text={t('tips.size')} />
             </span>
             <input
-              type="range" min={60} max={LANDSCAPE_FORMATS.has(slide.format) || slide.format === 'ipad-13' ? 180 : 150} value={slide.deviceScale ?? 100}
+              aria-label={t('frame.size')} type="range" min={60} max={LANDSCAPE_FORMATS.has(slide.format) || slide.format === 'ipad-13' ? 180 : 150} value={slide.deviceScale ?? 100}
               onChange={(e) => updateSlide(activeSlideId, { deviceScale: Number(e.target.value) })}
               className="flex-1 min-w-0"
             />
@@ -145,7 +173,7 @@ export function FramePanel() {
           {t('frame.rotate')} <Tooltip text={t('tips.rotate')} />
         </span>
         <input
-          type="range" min={-40} max={40} value={slide.deviceRotate ?? 0}
+          aria-label={t('frame.rotate')} type="range" min={-40} max={40} value={slide.deviceRotate ?? 0}
           onChange={(e) => updateSlide(activeSlideId, { deviceRotate: Number(e.target.value) })}
           className="flex-1 min-w-0"
         />
@@ -165,7 +193,7 @@ export function FramePanel() {
             {t('frame.tilt')} <Tooltip text={t('tips.tilt')} />
           </span>
           <input
-            type="range" min={-60} max={60} value={slide.frameTilt}
+            aria-label={t('frame.tilt')} type="range" min={-60} max={60} value={slide.frameTilt}
             onChange={(e) => updateSlide(activeSlideId, { frameTilt: Number(e.target.value) })}
             className="flex-1 min-w-0"
           />
@@ -195,6 +223,7 @@ export function FramePanel() {
           {t('frame.span_next')}
           <Tooltip text={t('tips.span')} side="top-end" />
         </label>
+        <SpanPreview slide={slide} active={spanning} />
         {confirmInsert && (
           <ConfirmDialog
             message={
@@ -222,7 +251,7 @@ export function FramePanel() {
                 {t('frame.span_x')} <Tooltip text={t('tips.span_x')} />
               </span>
               <input
-                type="range" min={50} max={150} value={slide.spanX ?? 100}
+                aria-label={t('frame.span_x_label')} type="range" min={50} max={150} value={slide.spanX ?? 100}
                 onChange={(e) => updateSlide(activeSlideId, { spanX: Number(e.target.value) })}
                 className="flex-1 min-w-0"
               />

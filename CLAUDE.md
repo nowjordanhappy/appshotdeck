@@ -151,7 +151,7 @@ Critical details for the 3D renderer:
 
 - Slide-in panel from the right. Fixed position, full height, `w-72`, `z-50`. Backdrop closes it.
 - Opened via `HelpCircle` button in the header (next to the theme toggle).
-- Sections: Getting Started (4 steps), Keyboard Shortcuts (← →, ⌘D, ⌫), Pro Tips (5 items).
+- Sections: Getting Started (4 steps), Keyboard Shortcuts (← →, ⌘D, ⌫), Callouts, Translations, Per-language screenshots, Device across two slides (4 steps), Pro Tips (4 items).
 - Detects Mac vs Windows via `navigator.platform` to show `⌘` or `Ctrl`.
 
 ### Keyboard shortcuts (`src/App.tsx`)
