@@ -2,12 +2,20 @@ name: CI
 
 on:
   pull_request:
+    paths-ignore: ['**.md', 'docs/**']
   push:
     branches: [main]
+    paths-ignore: ['**.md', 'docs/**']
+
+# A newer push to the same branch/PR makes the older run pointless
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -19,3 +27,4 @@ jobs:
       # tsc -b + vite build: catches type errors too
       - run: npm run build
       # Lint is left out until the 7 existing eslint errors on main are fixed
+      # No artifacts are uploaded; if that changes, set retention-days (Actions storage is the tight budget)

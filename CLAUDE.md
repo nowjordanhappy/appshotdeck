@@ -13,7 +13,7 @@ npm run lint      # eslint
 npm test          # vitest (unit tests, src/**/*.test.ts)
 ```
 
-CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test` and `npm run build` on every PR and push to `main`. Lint is not in CI yet (existing eslint errors on `main`).
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm test` and `npm run build` on every PR and push to `main`. Lint is not in CI yet (existing eslint errors on `main`). Docs-only changes (`**.md`, `docs/**`) skip CI, a newer push cancels the running one, and the job times out after 10 min. The repo is public (Actions minutes are free) and no artifacts are uploaded — add `retention-days` if that ever changes.
 
 ## Key architecture
 
