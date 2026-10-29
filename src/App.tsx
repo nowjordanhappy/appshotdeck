@@ -247,8 +247,9 @@ export default function App() {
     const idx = slides.findIndex((s) => s.id === activeSlideId)
     const lang = activeLanguage
     flushSync(() => setExportLanguage(lang))
-    const suffix = lang === 'en' ? '' : `-${lang}`
-    await exportSlide(el, activeSlide.format, `slide-${idx + 1}${suffix}`)
+    // Same per-format number as the ZIP export, so a slide has one name either way
+    const n = slides.slice(0, idx + 1).filter((s) => s.format === activeSlide.format).length
+    await exportSlide(el, activeSlide.format, `${lang}-slide-${String(n).padStart(2, '0')}`)
     flushSync(() => setExportLanguage('en'))
   }, [activeSlide, activeSlideId, slides, activeLanguage])
 
